@@ -4,6 +4,7 @@
    দরকারি ফাংশনগুলো সংশ্লিষ্ট ফাইলের নিচেই window-এ অ্যাসাইন করা আছে।
    ========================================================== */
 import { initModal } from './modal.js';
+import './payment-accounts.js';
 import './catalog.js';
 import './purchases.js';
 import './sales.js';

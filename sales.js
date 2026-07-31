@@ -1,8 +1,9 @@
 import { sb } from './supabaseClient.js';
 import { DB, loadAll, customerName, brandName, ensureCustomer } from './state.js';
-import { taka, val, todayISO, dateBn, emptyState, setLoading, paymentMethodOptions, paymentMethodLabel } from './utils.js';
+import { taka, val, todayISO, dateBn, emptyState, setLoading, paymentMethodOptions } from './utils.js';
 import { openModal, closeModal } from './modal.js';
 import { renderCatalog } from './catalog.js';
+import { resolvePaymentSelection, paymentMethodDisplay } from './payment-accounts.js';
 
 /* ============================================================ SALES */
 let salesFilter = 'all';
@@ -29,7 +30,7 @@ export function renderSales() {
             <td>${customerName(s.customer_id)}</td>
             <td>${s.items.map(i => `${i.name} × ${i.qty}`).join(', ')}</td>
             <td class="num">${taka(s.total)}</td><td class="num">${taka(s.paid)}</td>
-            <td><span class="tag ${s.payment_method}">${paymentMethodLabel(s.payment_method)}</span></td>
+            <td><span class="tag ${s.payment_method}">${paymentMethodDisplay(s.payment_method, s.payment_account_id)}</span></td>
             <td class="num">${s.due > 0 ? `<span class="tag due">${taka(s.due)}</span>` : `<span class="tag paid">নেই</span>`}</td>
             <td><button class="btn btn-danger-ghost btn-sm" onclick="deleteSale('${s.id}')">ডিলিট</button></td>
           </tr>`).join('')}
@@ -56,7 +57,8 @@ export function openSaleModal() {
       <div class="field"><label>তারিখ</label><input id="f_sdate" type="date" value="${todayISO()}"></div>
       <div class="field"><label>পেইড হয়েছে</label><input id="f_paid" type="number" value="0" oninput="updateSaleTotals()"></div>
     </div>
-    <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="f_smethod">${paymentMethodOptions('cash')}</select></div>
+    <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="f_smethod" onchange="onPaymentMethodChange('f_s')">${paymentMethodOptions('cash')}</select></div>
+    <div class="field" id="f_sAccountWrap"></div>
     <div class="totals-box">
       <div class="r"><span>সর্বমোট</span><b id="sTotal" class="num">৳০</b></div>
       <div class="r"><span>বাকি থাকবে</span><b id="sDue" class="num" style="color:var(--gold-600)">৳০</b></div>
@@ -109,13 +111,16 @@ export async function saveSale() {
   const total = validItems.reduce((s, i) => s + i.qty * i.price, 0);
   const paid = Number(val('f_paid') || 0);
   const due = Math.max(0, total - paid);
-  const paymentMethod = val('f_smethod') || 'cash';
 
   setLoading(true);
   try {
+    const paymentSel = await resolvePaymentSelection('f_s');
+    if (!paymentSel) return;
+
     const customer = await ensureCustomer(cname, val('f_cphone'));
     const { data: saleRow, error: serr } = await sb.from('sales').insert({
-      date: val('f_sdate') || todayISO(), sale_type: currentSaleType, customer_id: customer.id, total, paid, due, payment_method: paymentMethod
+      date: val('f_sdate') || todayISO(), sale_type: currentSaleType, customer_id: customer.id, total, paid, due,
+      payment_method: paymentSel.payment_method, payment_account_id: paymentSel.payment_account_id
     }).select().single();
     if (serr) { alert('বিক্রয় সেভ ব্যর্থ: ' + serr.message); return; }
 

@@ -144,6 +144,12 @@ tbody tr:hover{ background:rgba(255,255,255,.04) !important; }
 }
 .field input::placeholder, .field textarea::placeholder{ color:#5C6699; }
 .field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--teal-500) !important; }
+.field select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238D97C4'/%3E%3C/svg%3E") !important;
+}
+/* ড্রপডাউন খোলার সময় অপশনগুলোও যেন ডার্ক থিমের সাথে মিলে যায় (সাপোর্ট ব্রাউজারভেদে ভিন্ন) */
+.field select option{ background:var(--card) !important; color:var(--ink) !important; }
+.field select option:checked, .field select option:hover{ background:var(--teal-800) !important; color:#FFF !important; }
 .pw-eye{ color:var(--muted); }
 .pw-eye:hover{ background:rgba(255,255,255,.06) !important; }
 

@@ -123,6 +123,13 @@ tbody tr:last-child td{border-bottom:none;} tbody tr:hover{background:#FAF8F0;}
   font-family:'Hind Siliguri'; font-size:14px; background:#FDFCF8; color:var(--ink);
 }
 .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--teal-500);}
+.field select{
+  appearance:none; -webkit-appearance:none; -moz-appearance:none;
+  padding-right:30px; cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23746C5C'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 12px center; background-size:10px 6px;
+}
+.field select option{ background:var(--card); color:var(--ink); }
 .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
 .row3{display:grid; grid-template-columns:1.4fr .8fr .8fr auto; gap:8px; align-items:end;}
 .item-row{border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:8px; background:#FAF8F0;}

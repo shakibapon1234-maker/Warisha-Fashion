@@ -5,11 +5,13 @@ export const DB = {
   brands: [], products: [], suppliers: [], customers: [],
   purchases: [], sales: [], payments_customer: [], payments_supplier: [],
   investments: [], advances_customer: [], advances_supplier: [], expenses: [],
+  payment_accounts: [],
 };
 
 export function brandName(id) { const b = DB.brands.find(x => x.id === id); return b ? b.name : '-'; }
 export function customerName(id) { const c = DB.customers.find(c => c.id === id); return c ? c.name : 'ক্যাশ কাস্টমার'; }
 export function supplierName(id) { const s = DB.suppliers.find(s => s.id === id); return s ? s.name : '-'; }
+export function paymentAccountName(id) { const a = DB.payment_accounts.find(a => a.id === id); return a ? a.name : ''; }
 
 export async function ensureCustomer(name, phone) {
   if (!name) return null;
@@ -35,7 +37,7 @@ export async function ensureSupplier(name) {
 export async function loadAll() {
   setLoading(true);
   try {
-    const [brandsR, productsR, suppliersR, customersR, purchasesR, salesR, pcR, psR, invR, acR, asR, expR] = await Promise.all([
+    const [brandsR, productsR, suppliersR, customersR, purchasesR, salesR, pcR, psR, invR, acR, asR, expR, paR] = await Promise.all([
       sb.from('brands').select('*').order('name'),
       sb.from('products').select('*').order('name'),
       sb.from('suppliers').select('*').order('name'),
@@ -48,6 +50,7 @@ export async function loadAll() {
       sb.from('advances_customer').select('*'),
       sb.from('advances_supplier').select('*'),
       sb.from('expenses').select('*'),
+      sb.from('payment_accounts').select('*').order('type').order('name'),
     ]);
     DB.brands = brandsR.data || [];
     DB.products = (productsR.data || []).map(p => ({ ...p, buy_price: Number(p.buy_price), qty: Number(p.qty) }));
@@ -67,6 +70,7 @@ export async function loadAll() {
     DB.advances_customer = (acR.data || []).map(x => ({ ...x, amount: Number(x.amount) }));
     DB.advances_supplier = (asR.data || []).map(x => ({ ...x, amount: Number(x.amount) }));
     DB.expenses = (expR.data || []).map(x => ({ ...x, amount: Number(x.amount) }));
+    DB.payment_accounts = paR.data || [];
   } catch (e) {
     console.error(e); alert('ডেটা লোড করতে সমস্যা হয়েছে: ' + (e.message || e));
   } finally {

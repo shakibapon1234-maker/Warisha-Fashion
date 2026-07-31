@@ -1,9 +1,10 @@
 import { sb } from './supabaseClient.js';
 import { DB, loadAll } from './state.js';
 import { brandName, supplierName, ensureSupplier } from './state.js';
-import { taka, val, todayISO, dateBn, emptyState, paymentMethodOptions, paymentMethodLabel, setLoading } from './utils.js';
+import { taka, val, todayISO, dateBn, emptyState, paymentMethodOptions, setLoading } from './utils.js';
 import { openModal, closeModal } from './modal.js';
 import { renderCatalog } from './catalog.js';
+import { resolvePaymentSelection, paymentMethodDisplay } from './payment-accounts.js';
 
 /* ============================================================ PURCHASES */
 export function renderPurchases() {
@@ -19,7 +20,7 @@ export function renderPurchases() {
             <td>${dateBn(p.date)}</td><td>${brandName(p.brand_id)}</td><td>${supplierName(p.supplier_id)}</td>
             <td>${p.items.map(i => `${i.name} × ${i.qty}`).join(', ')}</td>
             <td class="num">${taka(p.total)}</td><td class="num">${taka(p.paid)}</td>
-            <td><span class="tag ${p.payment_method}">${paymentMethodLabel(p.payment_method)}</span></td>
+            <td><span class="tag ${p.payment_method}">${paymentMethodDisplay(p.payment_method, p.payment_account_id)}</span></td>
             <td class="num">${p.due > 0 ? `<span class="tag due">${taka(p.due)}</span>` : `<span class="tag paid">নেই</span>`}</td>
             <td><button class="btn btn-danger-ghost btn-sm" onclick="deletePurchase('${p.id}')">ডিলিট</button></td>
           </tr>`).join('')}
@@ -47,7 +48,8 @@ export function openPurchaseModal() {
       <div class="field"><label>তারিখ</label><input id="f_pdate" type="date" value="${todayISO()}"></div>
       <div class="field"><label>পেইড হয়েছে</label><input id="f_ppaid" type="number" value="0" oninput="updatePurchaseTotals()"></div>
     </div>
-    <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="f_pmethod">${paymentMethodOptions('cash')}</select></div>
+    <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="f_pmethod" onchange="onPaymentMethodChange('f_p')">${paymentMethodOptions('cash')}</select></div>
+    <div class="field" id="f_pAccountWrap"></div>
     <div class="totals-box">
       <div class="r"><span>সর্বমোট</span><b id="pTotal" class="num">৳০</b></div>
       <div class="r"><span>সাপ্লায়ারকে বাকি থাকবে</span><b id="pDue" class="num" style="color:var(--gold-600)">৳০</b></div>
@@ -115,10 +117,12 @@ export async function savePurchase() {
   if (!sourceName) { alert('সোর্স/সাপ্লায়ারের নাম দিন'); return; }
   const validItems = purchaseItems.filter(i => i.product_id && i.qty > 0);
   if (!validItems.length) { alert('অন্তত একটা প্রোডাক্ট বাছাই করুন'); return; }
-  const paymentMethod = val('f_pmethod') || 'cash';
 
   setLoading(true);
   try {
+    const paymentSel = await resolvePaymentSelection('f_p');
+    if (!paymentSel) return;
+
     if (brandId === '__newbrand__') {
       const bname = val('f_newbrand');
       if (!bname) { alert('নতুন ব্র্যান্ডের নাম দিন'); return; }
@@ -145,7 +149,8 @@ export async function savePurchase() {
     const supplier = await ensureSupplier(sourceName);
 
     const { data: purchaseRow, error: perr } = await sb.from('purchases').insert({
-      date: val('f_pdate') || todayISO(), brand_id: brandId, supplier_id: supplier.id, total, paid, due, payment_method: paymentMethod
+      date: val('f_pdate') || todayISO(), brand_id: brandId, supplier_id: supplier.id, total, paid, due,
+      payment_method: paymentSel.payment_method, payment_account_id: paymentSel.payment_account_id
     }).select().single();
     if (perr) { alert('ক্রয় সেভ ব্যর্থ: ' + perr.message); return; }
 

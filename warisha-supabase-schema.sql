@@ -67,6 +67,18 @@ create table if not exists customers (
 create index if not exists idx_customers_name on customers(name);
 
 -- ------------------------------------------------------------
+-- পেমেন্ট মাধ্যমের একাউন্ট (মোবাইল ব্যাংকিং: বিকাশ/নগদ, বা ব্যাংক নাম)
+-- সেটিংস থেকে ইউজার নিজে এখানে যোগ/ডিলিট করবে
+-- ------------------------------------------------------------
+create table if not exists payment_accounts (
+  id uuid primary key default gen_random_uuid(),
+  type text not null check (type in ('bank','mobile_banking')),
+  name text not null,
+  created_at timestamptz not null default now()
+);
+create unique index if not exists idx_payment_accounts_type_name on payment_accounts(type, lower(name));
+
+-- ------------------------------------------------------------
 -- ক্রয় (একটা এন্ট্রি = এক ব্র্যান্ড + এক সোর্স, একাধিক প্রোডাক্ট লাইন)
 -- ------------------------------------------------------------
 create table if not exists purchases (
@@ -78,6 +90,7 @@ create table if not exists purchases (
   paid numeric(12,2) not null default 0,
   due numeric(12,2) not null default 0,
   payment_method text not null default 'cash' check (payment_method in ('cash','bank','mobile_banking')),
+  payment_account_id uuid references payment_accounts(id) on delete set null,
   created_at timestamptz not null default now()
 );
 create index if not exists idx_purchases_brand on purchases(brand_id);
@@ -105,6 +118,7 @@ create table if not exists sales (
   paid numeric(12,2) not null default 0,
   due numeric(12,2) not null default 0,
   payment_method text not null default 'cash' check (payment_method in ('cash','bank','mobile_banking')),
+  payment_account_id uuid references payment_accounts(id) on delete set null,
   created_at timestamptz not null default now()
 );
 create index if not exists idx_sales_customer on sales(customer_id);
@@ -211,6 +225,7 @@ alter table investments enable row level security;
 alter table advances_customer enable row level security;
 alter table advances_supplier enable row level security;
 alter table expenses enable row level security;
+alter table payment_accounts enable row level security;
 
 create policy "allow all for authenticated" on brands for all to authenticated using (true) with check (true);
 create policy "allow all for authenticated" on products for all to authenticated using (true) with check (true);
@@ -226,6 +241,7 @@ create policy "allow all for authenticated" on investments for all to authentica
 create policy "allow all for authenticated" on advances_customer for all to authenticated using (true) with check (true);
 create policy "allow all for authenticated" on advances_supplier for all to authenticated using (true) with check (true);
 create policy "allow all for authenticated" on expenses for all to authenticated using (true) with check (true);
+create policy "allow all for authenticated" on payment_accounts for all to authenticated using (true) with check (true);
 
 -- ============================================================
 -- (ঐচ্ছিক) সুবিধাজনক ভিউ — ব্র্যান্ড অনুযায়ী মোট স্টক ও ভ্যালু
