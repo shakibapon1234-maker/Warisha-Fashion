@@ -1,0 +1,162 @@
+import { sb } from './supabaseClient.js';
+import { DB, loadAll, customerName, brandName, ensureCustomer } from './state.js';
+import { taka, val, todayISO, dateBn, emptyState, setLoading, paymentMethodOptions, paymentMethodLabel } from './utils.js';
+import { openModal, closeModal } from './modal.js';
+import { renderCatalog } from './catalog.js';
+
+/* ============================================================ SALES */
+let salesFilter = 'all';
+export function setSalesFilter(k) { salesFilter = k; buildSalesFilterSeg(); renderSales(); }
+export function buildSalesFilterSeg() {
+  const opts = [['all', 'সব'], ['wholesale', 'পাইকারি'], ['retail', 'খুচরা']];
+  document.getElementById('salesFilterSeg').innerHTML = opts.map(([k, l]) =>
+    `<button class="${salesFilter === k ? 'active' : ''}" onclick="setSalesFilter('${k}')">${l}</button>`).join('');
+}
+export function renderSales() {
+  const wrap = document.getElementById('salesTable');
+  let rows = [...DB.sales];
+  if (salesFilter !== 'all') rows = rows.filter(s => s.sale_type === salesFilter);
+  rows.sort((a, b) => b.date.localeCompare(a.date));
+  if (!rows.length) { wrap.innerHTML = emptyState('কোনো বিক্রয় নেই', 'ফিল্টার পাল্টে দেখুন বা নতুন বিক্রয় যোগ করুন'); return; }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>তারিখ</th><th>ধরন</th><th>কাস্টমার</th><th>প্রোডাক্ট</th><th>মোট</th><th>পেইড</th><th>মাধ্যম</th><th>বাকি</th><th></th></tr></thead>
+      <tbody>
+        ${rows.map(s => `
+          <tr>
+            <td>${dateBn(s.date)}</td>
+            <td><span class="tag ${s.sale_type}">${s.sale_type === 'wholesale' ? 'পাইকারি' : 'খুচরা'}</span></td>
+            <td>${customerName(s.customer_id)}</td>
+            <td>${s.items.map(i => `${i.name} × ${i.qty}`).join(', ')}</td>
+            <td class="num">${taka(s.total)}</td><td class="num">${taka(s.paid)}</td>
+            <td><span class="tag ${s.payment_method}">${paymentMethodLabel(s.payment_method)}</span></td>
+            <td class="num">${s.due > 0 ? `<span class="tag due">${taka(s.due)}</span>` : `<span class="tag paid">নেই</span>`}</td>
+            <td><button class="btn btn-danger-ghost btn-sm" onclick="deleteSale('${s.id}')">ডিলিট</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+let saleItems = []; let currentSaleType = 'retail';
+export function openSaleModal() {
+  saleItems = [{ product_id: '', qty: 1, price: 0 }]; currentSaleType = 'retail';
+  openModal(`
+    <h3>নতুন বিক্রয়</h3><div class="stitch"></div>
+    <div class="field"><label>ধরন</label>
+      <div class="seg" id="saleTypeSeg"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>কাস্টমারের নাম</label><input id="f_cname" list="custList" placeholder="নাম লিখুন">
+        <datalist id="custList">${DB.customers.map(c => `<option value="${c.name}">`).join('')}</datalist>
+      </div>
+      <div class="field"><label>ফোন (ঐচ্ছিক)</label><input id="f_cphone" placeholder="017..."></div>
+    </div>
+    <div id="itemRows"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addSaleRow()">+ আরও প্রোডাক্ট</button>
+    <div class="row2" style="margin-top:12px;">
+      <div class="field"><label>তারিখ</label><input id="f_sdate" type="date" value="${todayISO()}"></div>
+      <div class="field"><label>পেইড হয়েছে</label><input id="f_paid" type="number" value="0" oninput="updateSaleTotals()"></div>
+    </div>
+    <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="f_smethod">${paymentMethodOptions('cash')}</select></div>
+    <div class="totals-box">
+      <div class="r"><span>সর্বমোট</span><b id="sTotal" class="num">৳০</b></div>
+      <div class="r"><span>বাকি থাকবে</span><b id="sDue" class="num" style="color:var(--gold-600)">৳০</b></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">বাতিল</button>
+      <button class="btn btn-primary" onclick="saveSale()">বিক্রয় সেভ করুন</button>
+    </div>`);
+  buildSaleTypeSeg();
+  renderSaleRows();
+}
+export function setSaleType(t) { currentSaleType = t; buildSaleTypeSeg(); }
+export function buildSaleTypeSeg() {
+  document.getElementById('saleTypeSeg').innerHTML = `
+    <button class="${currentSaleType === 'retail' ? 'active' : ''}" onclick="setSaleType('retail')">খুচরা</button>
+    <button class="${currentSaleType === 'wholesale' ? 'active' : ''}" onclick="setSaleType('wholesale')">পাইকারি</button>`;
+}
+function productOptions(selectedId) { return DB.products.map(p => `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${p.name} — ${brandName(p.brand_id)} (স্টক ${p.qty})</option>`).join(''); }
+export function renderSaleRows() {
+  document.getElementById('itemRows').innerHTML = saleItems.map((it, idx) => `
+    <div class="item-row">
+      <div class="row3">
+        <div class="field" style="margin:0;"><label>প্রোডাক্ট</label>
+          <select onchange="onSaleProductChange(${idx}, this.value)"><option value="">-- বাছাই করুন --</option>${productOptions(it.product_id)}</select>
+        </div>
+        <div class="field" style="margin:0;"><label>Quantity</label><input type="number" min="1" value="${it.qty}" oninput="onSaleQtyChange(${idx}, this.value)"></div>
+        <div class="field" style="margin:0;"><label>দাম/পিস</label><input type="number" value="${it.price}" oninput="onSalePriceChange(${idx}, this.value)"></div>
+        ${saleItems.length > 1 ? `<button class="remove-row" onclick="removeSaleRow(${idx})">✕</button>` : '<span></span>'}
+      </div>
+      <div class="line-total">লাইন টোটাল: ${taka(it.qty * it.price)}</div>
+    </div>`).join('');
+  updateSaleTotals();
+}
+export function onSaleProductChange(idx, pid) { const p = DB.products.find(x => x.id === pid); saleItems[idx].product_id = pid; saleItems[idx].name = p ? p.name : ''; renderSaleRows(); }
+export function onSaleQtyChange(idx, v) { saleItems[idx].qty = Number(v || 1); renderSaleRows(); }
+export function onSalePriceChange(idx, v) { saleItems[idx].price = Number(v || 0); renderSaleRows(); }
+export function addSaleRow() { saleItems.push({ product_id: '', qty: 1, price: 0 }); renderSaleRows(); }
+export function removeSaleRow(idx) { saleItems.splice(idx, 1); renderSaleRows(); }
+export function updateSaleTotals() {
+  const total = saleItems.reduce((s, i) => s + i.qty * i.price, 0);
+  const paid = Number(val('f_paid') || 0);
+  document.getElementById('sTotal').textContent = taka(total);
+  document.getElementById('sDue').textContent = taka(Math.max(0, total - paid));
+}
+export async function saveSale() {
+  const cname = val('f_cname');
+  if (!cname) { alert('কাস্টমারের নাম দিন'); return; }
+  const validItems = saleItems.filter(i => i.product_id && i.qty > 0);
+  if (!validItems.length) { alert('অন্তত একটা প্রোডাক্ট বাছাই করুন'); return; }
+  const total = validItems.reduce((s, i) => s + i.qty * i.price, 0);
+  const paid = Number(val('f_paid') || 0);
+  const due = Math.max(0, total - paid);
+  const paymentMethod = val('f_smethod') || 'cash';
+
+  setLoading(true);
+  try {
+    const customer = await ensureCustomer(cname, val('f_cphone'));
+    const { data: saleRow, error: serr } = await sb.from('sales').insert({
+      date: val('f_sdate') || todayISO(), sale_type: currentSaleType, customer_id: customer.id, total, paid, due, payment_method: paymentMethod
+    }).select().single();
+    if (serr) { alert('বিক্রয় সেভ ব্যর্থ: ' + serr.message); return; }
+
+    const itemRows = validItems.map(i => ({ sale_id: saleRow.id, product_id: i.product_id, name: i.name, qty: i.qty, price: i.price }));
+    await sb.from('sale_items').insert(itemRows);
+
+    for (const it of validItems) {
+      const p = DB.products.find(x => x.id === it.product_id);
+      const newQty = Math.max(0, (p ? p.qty : 0) - it.qty);
+      await sb.from('products').update({ qty: newQty }).eq('id', it.product_id);
+    }
+    await sb.from('customers').update({ due: customer.due + due }).eq('id', customer.id);
+
+    closeModal(); await loadAll(); renderSales(); renderCatalog();
+  } finally { setLoading(false); }
+}
+export async function deleteSale(id) {
+  if (!confirm('এই বিক্রয়টি ডিলিট করবেন? স্টক ও বকেয়া আগের অবস্থায় ফিরে যাবে।')) return;
+  const s = DB.sales.find(x => x.id === id);
+  setLoading(true);
+  try {
+    for (const it of s.items) {
+      const p = DB.products.find(x => x.id === it.product_id);
+      const newQty = (p ? p.qty : 0) + it.qty;
+      await sb.from('products').update({ qty: newQty }).eq('id', it.product_id);
+    }
+    const c = DB.customers.find(x => x.id === s.customer_id);
+    if (c) { await sb.from('customers').update({ due: Math.max(0, c.due - s.due) }).eq('id', c.id); }
+    await sb.from('sales').delete().eq('id', id);
+    await loadAll(); renderSales(); renderCatalog();
+  } finally { setLoading(false); }
+}
+
+window.setSalesFilter = setSalesFilter;
+window.openSaleModal = openSaleModal;
+window.setSaleType = setSaleType;
+window.onSaleProductChange = onSaleProductChange;
+window.onSaleQtyChange = onSaleQtyChange;
+window.onSalePriceChange = onSalePriceChange;
+window.addSaleRow = addSaleRow;
+window.removeSaleRow = removeSaleRow;
+window.updateSaleTotals = updateSaleTotals;
+window.saveSale = saveSale;
+window.deleteSale = deleteSale;

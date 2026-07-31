@@ -1,0 +1,140 @@
+:root{
+  --teal-900:#0F332C; --teal-800:#164940; --teal-700:#1D5F53; --teal-500:#2E8874;
+  --gold-600:#B9812E; --gold-500:#C9973E; --gold-300:#E7C989;
+  --bg:#F3F0E6; --card:#FFFFFF; --ink:#241F18; --muted:#746C5C; --border:#E2DAC4;
+  --danger:#B23A3A; --danger-bg:#FBEAE8; --success:#2F7A4F; --success-bg:#E9F4EC;
+  --amber-bg:#FBF1DF; --plum:#6B3F63; --plum-bg:#F1E7EF;
+  --blue:#2D5F82; --blue-bg:#E7F0F7; --rose:#B23F63; --rose-bg:#FBEAF0; --indigo:#4A4A8F; --indigo-bg:#ECEBF8;
+  --radius:14px; --shadow: 0 1px 2px rgba(20,30,25,.04), 0 6px 20px rgba(20,30,25,.06);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg); color:var(--ink); font-family:'Hind Siliguri', sans-serif; min-height:100vh;}
+h1,h2,h3,.display{font-family:'Baloo Da 2', 'Hind Siliguri', sans-serif;}
+::selection{background:var(--gold-300);}
+.stitch{height:0; border-top:2px dashed var(--gold-500); opacity:.55;}
+#loadingBanner{display:none; position:fixed; top:0; left:0; right:0; background:var(--gold-500); color:#3A2708; text-align:center; padding:7px; font-size:13px; font-weight:700; z-index:500;}
+.login-wrap{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;}
+.login-card{background:var(--card); border-radius:18px; padding:30px 26px; max-width:380px; width:100%; box-shadow:var(--shadow); border:1px solid var(--border);}
+header.top{
+  background:linear-gradient(135deg, var(--teal-900), var(--teal-700)); color:#F5F1E4;
+  padding:22px 24px 0 24px; border-radius:0 0 22px 22px; box-shadow:var(--shadow);
+  position:sticky; top:0; z-index:30;
+}
+.brand{display:flex; align-items:center; gap:12px; margin-bottom:14px;}
+.brand-text h1{margin:0; font-size:22px; font-weight:700; letter-spacing:.2px; color:#FBF6E8;}
+.brand-text p{margin:2px 0 0; font-size:12.5px; color:#CFE3DA; font-weight:500;}
+.userbar{display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:-6px 0 8px;}
+.userbar span{font-size:12px; color:#CFE3DA;}
+nav.tabs{display:flex; gap:4px; overflow-x:auto; padding-bottom:0; scrollbar-width:none;}
+nav.tabs::-webkit-scrollbar{display:none;}
+.swatch-strip{display:flex; height:6px; border-radius:0 0 10px 10px; overflow:hidden; margin:0 -24px;}
+.swatch-strip span{flex:1;}
+.tab-btn{
+  flex:0 0 auto; background:transparent; border:none; cursor:pointer; color:#D8E7DF;
+  font-family:'Hind Siliguri'; font-size:14px; font-weight:600; padding:10px 12px 12px; position:relative; white-space:nowrap;
+}
+.tab-btn.active{color:#FFFDF6;}
+.tab-btn.active::after{
+  content:""; position:absolute; left:8px; right:8px; bottom:0; height:3px;
+  background-image:repeating-linear-gradient(90deg, var(--gold-500) 0 6px, transparent 6px 10px); border-radius:2px;
+}
+main{max-width:1080px; margin:0 auto; padding:20px 16px 80px;}
+section{display:none;}
+section.active{display:block; animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+.section-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
+.section-head h2{margin:0; font-size:19px; font-weight:700; color:var(--teal-900);}
+.section-head .sub{font-size:12.5px; color:var(--muted); margin-top:2px;}
+.btn{
+  display:inline-flex; align-items:center; gap:6px; border:none; border-radius:10px; cursor:pointer;
+  font-family:'Hind Siliguri'; font-weight:600; font-size:14px; padding:9px 16px;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--teal-800); color:#FCF8ED;} .btn-primary:hover{background:var(--teal-700);}
+.btn-gold{background:var(--gold-500); color:#3A2708;} .btn-gold:hover{background:var(--gold-600);}
+.btn-ghost{background:transparent; color:var(--teal-800); border:1.5px solid var(--border);} .btn-ghost:hover{border-color:var(--teal-700);}
+.btn-danger-ghost{background:transparent; color:var(--danger); border:1.5px solid #EBD3D0;}
+.btn-sm{padding:5px 10px; font-size:12.5px; border-radius:8px;}
+.seg{display:inline-flex; background:#F0ECE0; border-radius:10px; padding:3px; gap:2px;}
+.seg button{
+  border:none; background:transparent; padding:7px 16px; border-radius:8px; cursor:pointer;
+  font-family:'Hind Siliguri'; font-weight:600; font-size:13.5px; color:var(--muted);
+}
+.seg button.active{background:var(--teal-800); color:#FCF8ED;}
+.grid-cards{display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px; margin-bottom:14px;}
+.card{
+  background:var(--card); border-radius:var(--radius); padding:15px 17px 16px; box-shadow:var(--shadow);
+  border:1px solid var(--border); position:relative; overflow:hidden;
+}
+.card::before{content:""; position:absolute; top:0; left:0; right:0; height:4px;}
+.card .icon-chip{
+  width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  margin-bottom:10px; box-shadow:0 3px 8px rgba(0,0,0,.12);
+}
+.card .icon-chip svg{width:18px; height:18px;}
+.card .label{font-size:12px; color:var(--muted); font-weight:600;}
+.card .value{font-size:20px; font-weight:700; margin-top:4px; font-family:'Baloo Da 2';}
+.card.in::before{background:linear-gradient(90deg,#2F7A4F,#6FCB92);}
+.card.in .icon-chip{background:linear-gradient(135deg,#2F7A4F,#6FCB92);} .card.in .value{color:#1F5C3A;}
+.card.out::before{background:linear-gradient(90deg,#B23A3A,#E88A83);}
+.card.out .icon-chip{background:linear-gradient(135deg,#B23A3A,#E88A83);} .card.out .value{color:#8C2A2A;}
+.card.cash::before{background:linear-gradient(90deg,var(--teal-900),var(--teal-500));}
+.card.cash .icon-chip{background:linear-gradient(135deg,var(--teal-900),var(--teal-500));} .card.cash .value{color:var(--teal-900);}
+.card.due::before{background:linear-gradient(90deg,var(--gold-600),var(--gold-300));}
+.card.due .icon-chip{background:linear-gradient(135deg,var(--gold-600),var(--gold-300));} .card.due .value{color:var(--gold-600);}
+.card.plum::before{background:linear-gradient(90deg,#6B3F63,#B074A3);}
+.card.plum .icon-chip{background:linear-gradient(135deg,#6B3F63,#B074A3);} .card.plum .value{color:var(--plum);}
+.card.stock::before{background:linear-gradient(90deg,var(--blue),#7FB2D6);}
+.card.stock .icon-chip{background:linear-gradient(135deg,var(--blue),#7FB2D6);} .card.stock .value{color:var(--blue);}
+.card.indigo::before{background:linear-gradient(90deg,var(--indigo),#8A8AC9);}
+.card.indigo .icon-chip{background:linear-gradient(135deg,var(--indigo),#8A8AC9);} .card.indigo .value{color:var(--indigo);}
+.card.rose::before{background:linear-gradient(90deg,var(--rose),#E38AA6);}
+.card.rose .icon-chip{background:linear-gradient(135deg,var(--rose),#E38AA6);} .card.rose .value{color:var(--rose);}
+.panel{background:var(--card); border-radius:var(--radius); border:1px solid var(--border); box-shadow:var(--shadow); padding:16px; margin-bottom:16px;}
+.panel h3{margin:0 0 10px; font-size:15px; color:var(--teal-900);}
+.panel-flex{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
+.table-wrap{background:var(--card); border-radius:var(--radius); border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; margin-bottom:16px;}
+table{width:100%; border-collapse:collapse; font-size:13.5px;}
+thead th{text-align:right; padding:10px 12px; background:#F7F4EA; color:var(--teal-900); font-weight:700; border-bottom:1.5px solid var(--border); white-space:nowrap;}
+tbody td{text-align:right; padding:10px 12px; border-bottom:1px solid var(--border); white-space:nowrap;}
+tbody tr:last-child td{border-bottom:none;} tbody tr:hover{background:#FAF8F0;}
+.num{font-variant-numeric:tabular-nums;}
+.tag{display:inline-block; padding:2px 8px; border-radius:20px; font-size:11.5px; font-weight:600;}
+.tag.low{background:var(--danger-bg); color:var(--danger);} .tag.ok{background:var(--success-bg); color:var(--success);}
+.tag.due{background:var(--amber-bg); color:var(--gold-600);} .tag.paid{background:var(--success-bg); color:var(--success);}
+.tag.wholesale{background:var(--plum-bg); color:var(--plum);} .tag.retail{background:#E4EEF6; color:#2D5F82;}
+.tag.cash{background:var(--success-bg); color:var(--success);}
+.tag.bank{background:var(--blue-bg); color:var(--blue);}
+.tag.mobile_banking{background:var(--plum-bg); color:var(--plum);}
+.row-actions{display:flex; gap:6px; justify-content:flex-start;}
+.empty-state{padding:30px 20px; text-align:center; color:var(--muted); font-size:13.5px;}
+.empty-state b{display:block; color:var(--teal-900); font-size:15px; margin-bottom:4px; font-family:'Baloo Da 2';}
+.overlay{position:fixed; inset:0; background:rgba(20,25,20,.45); display:none; align-items:flex-start; justify-content:center; padding:30px 14px; overflow-y:auto; z-index:100;}
+.overlay.open{display:flex;}
+.modal{background:var(--card); border-radius:16px; width:100%; max-width:560px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.modal h3{margin:0 0 4px; font-size:17px; color:var(--teal-900);}
+.modal .stitch{margin:10px 0 16px;}
+.field{margin-bottom:12px;}
+.field label{display:block; font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:4px;}
+.field input, .field select, .field textarea{
+  width:100%; padding:9px 10px; border-radius:9px; border:1.5px solid var(--border);
+  font-family:'Hind Siliguri'; font-size:14px; background:#FDFCF8; color:var(--ink);
+}
+.field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--teal-500);}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.row3{display:grid; grid-template-columns:1.4fr .8fr .8fr auto; gap:8px; align-items:end;}
+.item-row{border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:8px; background:#FAF8F0;}
+.item-row .line-total{font-size:12.5px; color:var(--teal-800); font-weight:700; margin-top:6px;}
+.totals-box{background:#F7F4EA; border-radius:10px; padding:12px; margin-top:8px; display:flex; flex-direction:column; gap:6px; font-size:14px;}
+.totals-box .r{display:flex; justify-content:space-between;} .totals-box .r b{font-family:'Baloo Da 2';}
+.modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:16px;}
+.remove-row{color:var(--danger); font-size:13px; font-weight:600; background:none; border:none; cursor:pointer;}
+.helper{font-size:11.5px; color:var(--muted); margin-top:3px;}
+.brand-panel{border-left:4px solid var(--gold-500);}
+@media (max-width:600px){
+  .row2{grid-template-columns:1fr;}
+  .row3{grid-template-columns:1fr 1fr;}
+  .row3 > *:nth-child(4){grid-column:1 / -1;}
+}
