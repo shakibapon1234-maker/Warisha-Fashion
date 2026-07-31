@@ -11,6 +11,7 @@ import './ledger.js';
 import './capital.js';
 import './expenses.js';
 import './reports.js';
+import './settings.js';
 import './tabs.js';
 import { initAuth } from './auth.js';
 

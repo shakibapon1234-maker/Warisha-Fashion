@@ -6,6 +6,7 @@ import { buildLedgerSeg, renderLedger } from './ledger.js';
 import { buildCapitalSeg, renderCapital } from './capital.js';
 import { renderExpenses } from './expenses.js';
 import { renderReport } from './reports.js';
+import { renderSettings } from './settings.js';
 
 /* ---------------- tabs ---------------- */
 export const TABS = [
@@ -17,6 +18,7 @@ export const TABS = [
   { id: 'capital', label: 'মূলধন ও অ্যাডভান্স' },
   { id: 'expenses', label: 'খরচ' },
   { id: 'reports', label: 'রিপোর্ট' },
+  { id: 'settings', label: 'সেটিংস' },
 ];
 export function buildTabs() {
   document.getElementById('tabs').innerHTML = TABS.map(t => `<button class="tab-btn" data-tab="${t.id}" onclick="showTab('${t.id}')">${t.label}</button>`).join('');
@@ -34,6 +36,7 @@ export function showTab(id) {
   if (id === 'capital') { buildCapitalSeg(); renderCapital(); }
   if (id === 'expenses') renderExpenses();
   if (id === 'reports') renderReport();
+  if (id === 'settings') renderSettings();
 }
 
 window.showTab = showTab;

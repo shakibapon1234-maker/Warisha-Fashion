@@ -30,7 +30,15 @@
       </div>
     </div>
     <div class="field"><label>ইমেইল</label><input id="authEmail" type="email" placeholder="you@example.com"></div>
-    <div class="field"><label>পাসওয়ার্ড</label><input id="authPassword" type="password" placeholder="********"></div>
+    <div class="field"><label>পাসওয়ার্ড</label>
+      <div class="pw-wrap">
+        <input id="authPassword" type="password" placeholder="********">
+        <button type="button" class="pw-eye" onclick="togglePw('authPassword', this)" aria-label="পাসওয়ার্ড দেখান/লুকান" tabindex="-1">
+          <svg class="eye-open" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+          <svg class="eye-closed" viewBox="0 0 24 24" fill="none"><path d="M3 3l18 18M10.6 10.7a3 3 0 004.2 4.2M6.5 6.7C4 8.3 2 12 2 12s4 7 11 7c1.9 0 3.6-.5 5-1.2M17.9 17.9C20.4 16.2 22 12 22 12s-1.6-3.5-5-5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
     <div id="authError" class="helper" style="display:none;"></div>
     <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:6px;" onclick="handleLogin()">লগইন করুন</button>
     <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;" onclick="handleSignup()">নতুন অ্যাকাউন্ট তৈরি করুন</button>
@@ -176,6 +184,27 @@
     </div>
     <div class="grid-cards" id="reportCards"></div>
     <div class="table-wrap"><div id="reportTable"></div></div>
+  </section>
+
+  <section id="tab-settings">
+    <div class="section-head"><div><h2>সেটিংস</h2><div class="sub">লগইন ইমেইল ও পাসওয়ার্ড পরিবর্তন করুন</div></div></div>
+
+    <div class="panel settings-panel">
+      <h3>ইমেইল পরিবর্তন</h3>
+      <div class="field"><label>বর্তমান ইমেইল</label><input id="setCurrentEmail" type="email" disabled></div>
+      <div class="field"><label>নতুন ইমেইল</label><input id="setNewEmail" type="email" placeholder="new@example.com"></div>
+      <div id="setEmailMsg" class="helper" style="display:none;"></div>
+      <button class="btn btn-primary" onclick="handleUpdateEmail()">ইমেইল আপডেট করুন</button>
+      <div class="helper" style="margin-top:8px;">নতুন ইমেইল সেভ করার পর, Supabase-এর সেটিংস অনুযায়ী কনফার্মেশন লিংক আসতে পারে (পুরনো ও/অথবা নতুন ইমেইলে) — সেটাতে ক্লিক করলে পরিবর্তন কার্যকর হবে।</div>
+    </div>
+
+    <div class="panel settings-panel">
+      <h3>পাসওয়ার্ড পরিবর্তন</h3>
+      <div class="field"><label>নতুন পাসওয়ার্ড</label><div id="setNewPwWrap"></div></div>
+      <div class="field"><label>নতুন পাসওয়ার্ড আবার লিখুন</label><div id="setNewPw2Wrap"></div></div>
+      <div id="setPwMsg" class="helper" style="display:none;"></div>
+      <button class="btn btn-primary" onclick="handleUpdatePassword()">পাসওয়ার্ড আপডেট করুন</button>
+    </div>
   </section>
 
 </main>
