@@ -1,71 +1,71 @@
 /* ============================================================
-   Warisha থ্রিপিস — "রঙধনু তাঁত" (Rainbow Loom) থিম
-   একটি কাপড়ের দোকানের জন্য উজ্জ্বল, রঙিন, উৎসবমুখর ডিজাইন।
+   Warisha থ্রিপিস — "নিয়ন রাত" (Neon Night) থিম
+   গাঢ় নেভি ব্যাকগ্রাউন্ডের উপর উজ্জ্বল, রঙিন, নিয়ন-কার্ড ডিজাইন।
    এই ফাইলটি style.css এর পরে লোড হয়ে পুরনো রং ওভাররাইড করে।
-   কোনো সাদা/অফ-হোয়াইট লেখা রাখা হয়নি — সব লেখাই রঙিন।
+   কোনো লেআউট/স্ট্রাকচার পরিবর্তন করা হয়নি — শুধু রং/ব্যাকগ্রাউন্ড।
    ============================================================ */
 
 :root{
-  /* --- মূল উৎসব-রঙের প্যালেট (থান কাপড়ের রং থেকে অনুপ্রাণিত) --- */
-  --teal-900:#3B0A66;   /* গাঢ় রয়্যাল ভায়োলেট — হেডার/হেডিং */
-  --teal-800:#D6006D;   /* রাণী পিংক — প্রাইমারি বাটন */
-  --teal-700:#B4045F;   /* গাঢ় রাণী পিংক — হোভার */
-  --teal-500:#06AED5;   /* ময়ূরকণ্ঠী ফিরোজা — ফোকাস/ক্যাশ */
+  --teal-900:#0B1130;   /* সবচেয়ে গাঢ় নেভি — হেডার */
+  --teal-800:#5B21B6;   /* উজ্জ্বল ভায়োলেট — প্রাইমারি বাটন */
+  --teal-700:#4C1D95;   /* গাঢ় ভায়োলেট — হোভার */
+  --teal-500:#22D3EE;   /* নিয়ন সায়ান — ফোকাস/ক্যাশ */
 
-  --gold-600:#E8590C;   /* গাঢ় মেরিগোল্ড কমলা */
-  --gold-500:#FF9F1C;   /* মেরিগোল্ড কমলা */
-  --gold-300:#FFD166;   /* হালকা মেরিগোল্ড/কেনারি হলুদ */
+  --gold-600:#F59E0B;
+  --gold-500:#FBBF24;   /* নিয়ন গোল্ড */
+  --gold-300:#FDE68A;
 
-  --bg:#FDF3FF;
-  --card:#FFFDF9;
-  --ink:#2B1140;        /* গাঢ় বেগুনি-কালো লেখা */
-  --muted:#7A5F94;      /* হালকা বেগুনি-ধূসর */
-  --border:#EAD9F7;
+  --bg:#0A0F2C;         /* মূল ডার্ক নেভি ব্যাকগ্রাউন্ড */
+  --card:#131A3B;       /* কার্ড প্যানেলের বেস — সেমি-ডার্ক */
+  --ink:#F1F5FF;         /* উজ্জ্বল প্রায়-সাদা লেখা */
+  --muted:#8D97C4;       /* হালকা নীলচে ধূসর */
+  --border:rgba(255,255,255,.10);
 
-  --danger:#D7263D;      --danger-bg:#FFE1E6;
-  --success:#06A77D;     --success-bg:#D9F7ED;
-  --amber-bg:#FFEFD2;
-  --plum:#7B2CBF;        --plum-bg:#F0E3FC;
-  --blue:#0388A6;        --blue-bg:#D9F4F8;
-  --rose:#E0117F;        --rose-bg:#FCE0EF;
-  --indigo:#5B21B6;      --indigo-bg:#EDE1FB;
+  --danger:#FF5C7A;      --danger-bg:rgba(255,92,122,.14);
+  --success:#34E29A;     --success-bg:rgba(52,226,154,.14);
+  --amber-bg:rgba(251,191,36,.14);
+  --plum:#C084FC;        --plum-bg:rgba(192,132,252,.14);
+  --blue:#38BDF8;        --blue-bg:rgba(56,189,248,.14);
+  --rose:#FB7185;        --rose-bg:rgba(251,113,133,.14);
+  --indigo:#818CF8;      --indigo-bg:rgba(129,140,248,.14);
 
-  /* "সাদা লেখা"-এর বদলে ব্যবহারের জন্য উজ্জ্বল কেনারি হলুদ */
-  --canary:#FFD966;
-  --canary-soft:#FFE9A8;
+  --canary:#FDE68A;
+  --canary-soft:#FEF3C7;
 
   --radius:16px;
-  --shadow: 0 2px 6px rgba(91,33,182,.10), 0 10px 26px rgba(214,0,109,.10);
+  --shadow: 0 2px 10px rgba(0,0,0,.35), 0 14px 32px rgba(0,0,0,.30);
 }
 
-/* ---------- ব্যাকগ্রাউন্ড: হালকা রঙিন মেশ + বিন্দু বিন্দু প্যাটার্ন ---------- */
+/* ---------- ব্যাকগ্রাউন্ড: গাঢ় নেভি + রঙিন গ্লো + ডট গ্রিড ---------- */
 body{
   background:
-    radial-gradient(circle at 8% 12%, rgba(255,159,28,.16), transparent 42%),
-    radial-gradient(circle at 92% 18%, rgba(6,174,213,.16), transparent 40%),
-    radial-gradient(circle at 15% 92%, rgba(123,44,191,.14), transparent 45%),
-    radial-gradient(circle at 88% 88%, rgba(214,0,109,.13), transparent 45%),
-    var(--bg);
-  background-attachment: fixed;
+    radial-gradient(circle at 10% 10%, rgba(91,33,182,.30), transparent 40%),
+    radial-gradient(circle at 90% 15%, rgba(34,211,238,.20), transparent 42%),
+    radial-gradient(circle at 15% 90%, rgba(251,113,133,.18), transparent 45%),
+    radial-gradient(circle at 90% 90%, rgba(52,226,154,.16), transparent 45%),
+    radial-gradient(circle, rgba(255,255,255,.05) 1px, transparent 1px) 0 0/22px 22px,
+    var(--bg) !important;
+  background-attachment: fixed, fixed, fixed, fixed, fixed, fixed;
+  color:var(--ink);
 }
 
-/* ---------- হেডার: ডাই করা কাপড়ের মতো ওমব্রে গ্র্যাডিয়েন্ট ---------- */
+/* ---------- হেডার ---------- */
 header.top{
-  background:linear-gradient(120deg, var(--teal-900) 0%, #7A1489 45%, var(--teal-800) 100%) !important;
-  box-shadow: 0 10px 24px rgba(59,10,102,.28);
+  background:linear-gradient(120deg, var(--teal-900) 0%, #1B1443 50%, #2E1065 100%) !important;
+  box-shadow: 0 10px 26px rgba(0,0,0,.45);
 }
-.brand-text h1{ color:var(--canary) !important; text-shadow:0 1px 0 rgba(0,0,0,.12); }
-.brand-text p{ color:#F3D9FF !important; }
-.userbar span{ color:var(--canary-soft) !important; }
-.userbar .btn-ghost{ color:var(--canary) !important; border-color:rgba(255,217,102,.55) !important; }
-.tab-btn{ color:#E3C9F5 !important; }
+.brand-text h1{ color:var(--canary) !important; text-shadow:0 1px 0 rgba(0,0,0,.3); }
+.brand-text p{ color:#C9B8FF !important; }
+.userbar span{ color:#C7D2FE !important; }
+.userbar .btn-ghost{ color:var(--canary) !important; border-color:rgba(253,230,138,.45) !important; }
+.tab-btn{ color:#9CA7DE !important; }
 .tab-btn.active{ color:var(--canary) !important; }
 .tab-btn.active::after{
   background-image: linear-gradient(90deg, var(--gold-500), var(--rose), var(--teal-500)) !important;
   height:4px;
 }
 
-/* স্বাচ স্ট্রিপকে রঙধনু-থ্রেড স্পুলে পরিণত করা */
+/* স্বাচ স্ট্রিপ রঙিন নিয়ন থ্রেড */
 .swatch-strip{ height:8px; }
 .swatch-strip span{ background:none !important; }
 .swatch-strip span:nth-child(1){ background:var(--gold-500) !important; }
@@ -75,48 +75,98 @@ header.top{
 .swatch-strip span:nth-child(5){ background:var(--danger) !important; }
 .swatch-strip span:nth-child(6){ background:var(--rose) !important; }
 
-/* ---------- বাটন: রঙিন গ্র্যাডিয়েন্ট, লেখা কেনারি হলুদ ---------- */
+/* ---------- বাটন ---------- */
 .btn-primary{
-  background:linear-gradient(135deg, var(--teal-800), #8B1FB0) !important;
-  color:var(--canary) !important;
-  box-shadow:0 6px 14px rgba(214,0,109,.30);
+  background:linear-gradient(135deg, var(--teal-800), #8B2FD9) !important;
+  color:#FFF !important;
+  box-shadow:0 6px 16px rgba(91,33,182,.45);
 }
-.btn-primary:hover{ background:linear-gradient(135deg, var(--teal-700), #711A8F) !important; }
-.btn-gold{ background:linear-gradient(135deg, var(--gold-500), var(--rose)) !important; color:#3A1200 !important; }
-.btn-gold:hover{ background:linear-gradient(135deg, var(--gold-600), var(--teal-700)) !important; }
-.btn-ghost{ color:var(--teal-800); border-color:var(--border); }
+.btn-primary:hover{ background:linear-gradient(135deg, var(--teal-700), #6D28D9) !important; }
+.btn-gold{ background:linear-gradient(135deg, var(--gold-500), var(--rose)) !important; color:#2B1200 !important; }
+.btn-gold:hover{ background:linear-gradient(135deg, var(--gold-600), #E11D48) !important; }
+.btn-ghost{ color:var(--ink); border-color:var(--border); }
 .btn-ghost:hover{ border-color:var(--teal-500); color:var(--teal-500); }
-.seg{ background:#F4E9FF; }
+.btn-danger-ghost{ color:var(--danger); border-color:rgba(255,92,122,.35); }
+.seg{ background:rgba(255,255,255,.06); }
 .seg button{ color:var(--muted); }
 .seg button.active{
   background:linear-gradient(135deg, var(--teal-800), var(--plum)) !important;
-  color:var(--canary) !important;
+  color:#FFF !important;
 }
 
-/* ---------- কার্ড: হালকা রঙিন আভা + টপ বার আগের থেকেই ভ্যারিয়েবল থেকে রঙিন ---------- */
-.card{ box-shadow:0 2px 8px rgba(91,33,182,.08), 0 8px 20px rgba(6,174,213,.08); }
-.card .icon-chip{ box-shadow:0 4px 10px rgba(59,10,102,.22); }
+/* ---------- কার্ড: প্রতিটা ক্যাটাগরির নিজস্ব রঙে টিন্টেড গ্লাস কার্ড (ছবি ১ এর স্টাইল) ---------- */
+.card{
+  background:linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.015)), var(--card) !important;
+  border:1px solid var(--border) !important;
+  box-shadow:0 2px 10px rgba(0,0,0,.30), 0 10px 26px rgba(0,0,0,.22);
+  backdrop-filter: blur(6px);
+}
+.card .label{ color:var(--muted) !important; letter-spacing:.3px; }
+.card .icon-chip{ box-shadow:0 4px 14px rgba(0,0,0,.35); }
+.card .icon-chip svg{ filter:drop-shadow(0 0 3px rgba(0,0,0,.25)); }
 
-/* ---------- টেবিল ও প্যানেল হেডারের হালকা রঙিন ব্যাকগ্রাউন্ড ---------- */
-thead th{ background:linear-gradient(90deg, #F3E4FF, #E4F8FB) !important; }
-tbody tr:hover{ background:#FDF3FA !important; }
-.item-row{ background:#FFF6E6 !important; border-color:var(--border); }
-.totals-box{ background:linear-gradient(90deg, #E9FBF6, #F3E7FF) !important; }
-.field input, .field select, .field textarea{ background:#FEFBFF !important; }
-.pw-eye:hover{ background:#F4E9FF !important; }
+.card.in{ background:linear-gradient(160deg, rgba(52,226,154,.14), rgba(52,226,154,.03)), var(--card) !important; border-color:rgba(52,226,154,.35) !important; }
+.card.in .value{ color:var(--success) !important; }
+.card.out{ background:linear-gradient(160deg, rgba(255,92,122,.14), rgba(255,92,122,.03)), var(--card) !important; border-color:rgba(255,92,122,.35) !important; }
+.card.out .value{ color:var(--danger) !important; }
+.card.cash{ background:linear-gradient(160deg, rgba(34,211,238,.16), rgba(34,211,238,.03)), var(--card) !important; border-color:rgba(34,211,238,.35) !important; }
+.card.cash .value{ color:var(--teal-500) !important; }
+.card.due{ background:linear-gradient(160deg, rgba(251,191,36,.16), rgba(251,191,36,.03)), var(--card) !important; border-color:rgba(251,191,36,.35) !important; }
+.card.due .value{ color:var(--gold-500) !important; }
+.card.plum{ background:linear-gradient(160deg, rgba(192,132,252,.16), rgba(192,132,252,.03)), var(--card) !important; border-color:rgba(192,132,252,.35) !important; }
+.card.plum .value{ color:var(--plum) !important; }
+.card.stock{ background:linear-gradient(160deg, rgba(56,189,248,.16), rgba(56,189,248,.03)), var(--card) !important; border-color:rgba(56,189,248,.35) !important; }
+.card.stock .value{ color:var(--blue) !important; }
+.card.indigo{ background:linear-gradient(160deg, rgba(129,140,248,.16), rgba(129,140,248,.03)), var(--card) !important; border-color:rgba(129,140,248,.35) !important; }
+.card.indigo .value{ color:var(--indigo) !important; }
+.card.rose{ background:linear-gradient(160deg, rgba(251,113,133,.16), rgba(251,113,133,.03)), var(--card) !important; border-color:rgba(251,113,133,.35) !important; }
+.card.rose .value{ color:var(--rose) !important; }
 
-/* ---------- ট্যাগ চিপ — আগের ভ্যারিয়েবল থেকেই রঙিন, বাড়তি জোর ---------- */
+/* ---------- প্যানেল, টেবিল, মোডাল — গাঢ় গ্লাস ---------- */
+.panel, .table-wrap{
+  background:linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,.01)), var(--card) !important;
+  border-color:var(--border) !important;
+}
+.panel h3{ color:var(--ink) !important; }
+thead th{ background:rgba(255,255,255,.05) !important; color:var(--ink) !important; border-bottom-color:var(--border) !important; }
+tbody td{ border-bottom-color:var(--border) !important; color:var(--ink); }
+tbody tr:hover{ background:rgba(255,255,255,.04) !important; }
+.item-row{ background:rgba(255,255,255,.04) !important; border-color:var(--border); }
+.totals-box{ background:rgba(255,255,255,.05) !important; }
+.helper{ color:var(--muted); }
+.empty-state{ color:var(--muted); }
+.empty-state b{ color:var(--ink); }
+
+/* ---------- ফর্ম ফিল্ড ---------- */
+.field label{ color:var(--muted); }
+.field input, .field select, .field textarea{
+  background:rgba(255,255,255,.04) !important; color:var(--ink) !important; border-color:var(--border) !important;
+}
+.field input::placeholder, .field textarea::placeholder{ color:#5C6699; }
+.field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--teal-500) !important; }
+.pw-eye{ color:var(--muted); }
+.pw-eye:hover{ background:rgba(255,255,255,.06) !important; }
+
+/* ---------- ট্যাগ চিপ ---------- */
 .tag{ font-weight:700; }
+.tag.low{ background:var(--danger-bg) !important; color:var(--danger) !important; }
+.tag.ok{ background:var(--success-bg) !important; color:var(--success) !important; }
+.tag.due{ background:var(--amber-bg) !important; color:var(--gold-500) !important; }
+.tag.paid{ background:var(--success-bg) !important; color:var(--success) !important; }
+.tag.wholesale{ background:var(--plum-bg) !important; color:var(--plum) !important; }
+.tag.retail{ background:var(--blue-bg) !important; color:var(--blue) !important; }
+.tag.cash{ background:var(--success-bg) !important; color:var(--success) !important; }
+.tag.bank{ background:var(--blue-bg) !important; color:var(--blue) !important; }
+.tag.mobile_banking{ background:var(--plum-bg) !important; color:var(--plum) !important; }
 
-/* ---------- বিভাগ শিরোনাম ও সেকশন হেড ---------- */
+/* ---------- বিভাগ শিরোনাম ---------- */
 .section-head h2{
-  background:linear-gradient(90deg, var(--teal-800), var(--plum));
+  background:linear-gradient(90deg, var(--canary), var(--rose));
   -webkit-background-clip:text; background-clip:text; color:transparent;
 }
-.panel h3{ color:var(--teal-800); }
-.empty-state b{ color:var(--plum); }
+.section-head .sub{ color:var(--muted); }
 
-/* ---------- সেলাই লাইন — রঙধনু ড্যাশ ---------- */
+/* ---------- সেলাই লাইন — নিয়ন ড্যাশ ---------- */
 .stitch{
   border-top:none; height:3px; opacity:.9; border-radius:2px;
   background-image:repeating-linear-gradient(90deg,
@@ -126,20 +176,38 @@ tbody tr:hover{ background:#FDF3FA !important; }
     var(--plum) 42px 52px, transparent 52px 56px);
 }
 
-/* ---------- লগইন কার্ডের রঙিন শীর্ষ-বর্ডার ---------- */
+/* ---------- লগইন স্ক্রিন ---------- */
 .login-card{
+  background:linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), var(--card) !important;
+  border:1px solid var(--border) !important;
   border-top:5px solid transparent;
   border-image:linear-gradient(90deg, var(--gold-500), var(--rose), var(--teal-500), var(--plum)) 1;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
 }
+.login-card .brand-text h1{ color:var(--canary) !important; }
+.login-card .brand-text p{ color:var(--muted) !important; }
 #loadingBanner{
   background:linear-gradient(90deg, var(--gold-500), var(--rose)) !important;
-  color:#3A1200 !important;
+  color:#2B1200 !important;
 }
 
-/* ---------- ব্র্যান্ড প্যানেলের বাম বর্ডার আরও রঙিন ---------- */
+/* ---------- মোডাল/ওভারলে ---------- */
+.overlay{ background:rgba(3,6,20,.65) !important; }
+.modal{
+  background:linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.015)), var(--card) !important;
+  color:var(--ink);
+  box-shadow:0 24px 70px rgba(0,0,0,.55);
+}
+.modal h3{ color:var(--ink) !important; }
+.remove-row{ color:var(--danger); }
+
+/* ---------- ব্র্যান্ড প্যানেলের বাম বর্ডার ---------- */
 .brand-panel{ border-left:4px solid var(--rose) !important; }
 
-/* ছোট স্ক্রিনে হেডারের কালার আরেকটু গাঢ় রাখা কনট্রাস্টের জন্য */
+/* ---------- সিলেকশন ---------- */
+::selection{ background:rgba(251,191,36,.35); color:var(--ink); }
+
+/* ছোট স্ক্রিনে হেডার */
 @media (max-width:600px){
-  header.top{ background:linear-gradient(160deg, var(--teal-900) 0%, var(--teal-800) 100%) !important; }
+  header.top{ background:linear-gradient(160deg, var(--teal-900) 0%, #2E1065 100%) !important; }
 }
