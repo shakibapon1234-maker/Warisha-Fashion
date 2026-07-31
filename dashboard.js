@@ -1,5 +1,6 @@
 import { DB, brandName, customerName, supplierName } from './state.js';
 import { taka, dateBn, todayISO, emptyState } from './utils.js';
+import { runSyncGuardAudit } from './backup-sync.js';
 
 /* ============================================================ DASHBOARD */
 export function computeTotals() {
@@ -34,6 +35,21 @@ export function renderDashboard() {
   document.getElementById('dashInvest').textContent = taka(t.investTotal);
   document.getElementById('dashCustAdv').textContent = taka(t.custAdvBalance);
   document.getElementById('dashSupAdv').textContent = taka(t.supAdvBalance);
+
+  const syncWrap = document.getElementById('dashSyncGuardWrap');
+  if (syncWrap) {
+    const audit = runSyncGuardAudit();
+    if (!audit.isHealthy) {
+      syncWrap.style.display = 'block';
+      syncWrap.innerHTML = `
+        <div style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+          <span>⚠️ <b>সিঙ্ক ওয়ার্নিং:</b> হিসাবের জায়গায় ${audit.issuesCount} টি অমিল পাওয়া গেছে।</span>
+          <button class="btn btn-gold btn-sm" onclick="fixSyncGuardDiscrepancies()">🔄 রিক্যালকুলেট ও ফিক্স করুন</button>
+        </div>`;
+    } else {
+      syncWrap.style.display = 'none';
+    }
+  }
 
   const low = DB.products.filter(p => p.qty <= 3);
   document.getElementById('lowStockList').innerHTML = low.length ? low.map(p => {
