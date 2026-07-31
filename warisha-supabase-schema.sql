@@ -84,6 +84,7 @@ create unique index if not exists idx_payment_accounts_type_name on payment_acco
 create table if not exists purchases (
   id uuid primary key default gen_random_uuid(),
   date date not null default current_date,
+  memo_no text,
   brand_id uuid not null references brands(id) on delete restrict,
   supplier_id uuid not null references suppliers(id) on delete restrict,
   total numeric(12,2) not null default 0,
@@ -112,6 +113,7 @@ create index if not exists idx_purchase_items_purchase on purchase_items(purchas
 create table if not exists sales (
   id uuid primary key default gen_random_uuid(),
   date date not null default current_date,
+  memo_no text,
   sale_type text not null check (sale_type in ('wholesale','retail')),
   customer_id uuid not null references customers(id) on delete restrict,
   total numeric(12,2) not null default 0,

@@ -142,6 +142,9 @@
       <div><h2>ক্রয়</h2><div class="sub">ব্র্যান্ড ও সোর্স অনুযায়ী স্টক যোগ হবে (বিক্রয়মূল্য ছাড়া)</div></div>
       <button class="btn btn-primary" onclick="openPurchaseModal()">+ নতুন ক্রয়</button>
     </div>
+    <div class="field" style="margin-bottom:12px;">
+      <input type="search" id="purchaseSearchInput" placeholder="🔍 মেমো নম্বর, ব্র্যান্ড বা সোর্স দিয়ে খুঁজুন..." oninput="renderPurchases()">
+    </div>
     <div class="table-wrap"><div id="purchasesTable"></div></div>
   </section>
 
@@ -150,7 +153,12 @@
       <div><h2>বিক্রয়</h2><div class="sub">পাইকারি ও খুচরা আলাদাভাবে দেখা যাবে</div></div>
       <button class="btn btn-primary" onclick="openSaleModal()">+ নতুন বিক্রয়</button>
     </div>
-    <div class="seg" id="salesFilterSeg" style="margin-bottom:12px;"></div>
+    <div class="row2" style="margin-bottom:12px; align-items:center;">
+      <div class="seg" id="salesFilterSeg" style="margin:0;"></div>
+      <div class="field" style="margin:0;">
+        <input type="search" id="saleSearchInput" placeholder="🔍 মেমো নম্বর, কাস্টমার বা প্রোডাক্ট দিয়ে খুঁজুন..." oninput="renderSales()">
+      </div>
+    </div>
     <div class="table-wrap"><div id="salesTable"></div></div>
   </section>
 

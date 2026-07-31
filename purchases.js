@@ -10,14 +10,27 @@ import { resolvePaymentSelection, paymentMethodDisplay } from './payment-account
 export function renderPurchases() {
   const wrap = document.getElementById('purchasesTable');
   if (!DB.purchases.length) { wrap.innerHTML = emptyState('কোনো ক্রয় নেই', 'প্রথম ক্রয়টি যোগ করুন'); return; }
-  const rows = [...DB.purchases].sort((a, b) => b.date.localeCompare(a.date));
+  const query = (document.getElementById('purchaseSearchInput')?.value || '').trim().toLowerCase();
+  let rows = [...DB.purchases].sort((a, b) => b.date.localeCompare(a.date));
+  if (query) {
+    rows = rows.filter(p => {
+      const memo = (p.memo_no || '').toLowerCase();
+      const brand = brandName(p.brand_id).toLowerCase();
+      const supplier = supplierName(p.supplier_id).toLowerCase();
+      const items = p.items.map(i => i.name).join(' ').toLowerCase();
+      return memo.includes(query) || brand.includes(query) || supplier.includes(query) || items.includes(query);
+    });
+  }
+  if (!rows.length) { wrap.innerHTML = emptyState('কোনো ক্রয় পাওয়া যায়নি', 'অনুগ্রহ করে অনুসন্ধানের শব্দ মিলিয়ে দেখুন'); return; }
   wrap.innerHTML = `
     <table>
-      <thead><tr><th>তারিখ</th><th>ব্র্যান্ড</th><th>সোর্স</th><th>প্রোডাক্ট</th><th>মোট</th><th>পেইড</th><th>মাধ্যম</th><th>বাকি</th><th></th></tr></thead>
+      <thead><tr><th>তারিখ</th><th>মেমো নম্বর</th><th>ব্র্যান্ড</th><th>সোর্স</th><th>প্রোডাক্ট</th><th>মোট</th><th>পেইড</th><th>মাধ্যম</th><th>বাকি</th><th></th></tr></thead>
       <tbody>
         ${rows.map(p => `
           <tr>
-            <td>${dateBn(p.date)}</td><td>${brandName(p.brand_id)}</td><td>${supplierName(p.supplier_id)}</td>
+            <td>${dateBn(p.date)}</td>
+            <td>${p.memo_no ? `<strong>${p.memo_no}</strong>` : '<span class="helper">-</span>'}</td>
+            <td>${brandName(p.brand_id)}</td><td>${supplierName(p.supplier_id)}</td>
             <td>${p.items.map(i => `${i.name} × ${i.qty}`).join(', ')}</td>
             <td class="num">${taka(p.total)}</td><td class="num">${taka(p.paid)}</td>
             <td><span class="tag ${p.payment_method}">${paymentMethodDisplay(p.payment_method, p.payment_account_id)}</span></td>
@@ -46,9 +59,12 @@ export function openPurchaseModal() {
     <button class="btn btn-ghost btn-sm" onclick="addPurchaseRow()">+ আরও প্রোডাক্ট</button>
     <div class="row2" style="margin-top:12px;">
       <div class="field"><label>তারিখ</label><input id="f_pdate" type="date" value="${todayISO()}"></div>
-      <div class="field"><label>পেইড হয়েছে</label><input id="f_ppaid" type="number" value="0" oninput="updatePurchaseTotals()"></div>
+      <div class="field"><label>মেমো নম্বর (ঐচ্ছিক)</label><input id="f_pmemo" placeholder="যেমন: M-101"></div>
     </div>
-    <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="f_pmethod" onchange="onPaymentMethodChange('f_p')">${paymentMethodOptions('cash')}</select></div>
+    <div class="row2">
+      <div class="field"><label>পেইড হয়েছে</label><input id="f_ppaid" type="number" value="0" oninput="updatePurchaseTotals()"></div>
+      <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="f_pmethod" onchange="onPaymentMethodChange('f_p')">${paymentMethodOptions('cash')}</select></div>
+    </div>
     <div class="field" id="f_pAccountWrap"></div>
     <div class="totals-box">
       <div class="r"><span>সর্বমোট</span><b id="pTotal" class="num">৳০</b></div>
@@ -147,9 +163,10 @@ export async function savePurchase() {
     const paid = Number(val('f_ppaid') || 0);
     const due = Math.max(0, total - paid);
     const supplier = await ensureSupplier(sourceName);
+    const memoNo = val('f_pmemo').trim();
 
     const { data: purchaseRow, error: perr } = await sb.from('purchases').insert({
-      date: val('f_pdate') || todayISO(), brand_id: brandId, supplier_id: supplier.id, total, paid, due,
+      date: val('f_pdate') || todayISO(), memo_no: memoNo, brand_id: brandId, supplier_id: supplier.id, total, paid, due,
       payment_method: paymentSel.payment_method, payment_account_id: paymentSel.payment_account_id
     }).select().single();
     if (perr) { alert('ক্রয় সেভ ব্যর্থ: ' + perr.message); return; }
