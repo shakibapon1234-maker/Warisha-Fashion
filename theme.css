@@ -1,0 +1,145 @@
+/* ============================================================
+   Warisha থ্রিপিস — "রঙধনু তাঁত" (Rainbow Loom) থিম
+   একটি কাপড়ের দোকানের জন্য উজ্জ্বল, রঙিন, উৎসবমুখর ডিজাইন।
+   এই ফাইলটি style.css এর পরে লোড হয়ে পুরনো রং ওভাররাইড করে।
+   কোনো সাদা/অফ-হোয়াইট লেখা রাখা হয়নি — সব লেখাই রঙিন।
+   ============================================================ */
+
+:root{
+  /* --- মূল উৎসব-রঙের প্যালেট (থান কাপড়ের রং থেকে অনুপ্রাণিত) --- */
+  --teal-900:#3B0A66;   /* গাঢ় রয়্যাল ভায়োলেট — হেডার/হেডিং */
+  --teal-800:#D6006D;   /* রাণী পিংক — প্রাইমারি বাটন */
+  --teal-700:#B4045F;   /* গাঢ় রাণী পিংক — হোভার */
+  --teal-500:#06AED5;   /* ময়ূরকণ্ঠী ফিরোজা — ফোকাস/ক্যাশ */
+
+  --gold-600:#E8590C;   /* গাঢ় মেরিগোল্ড কমলা */
+  --gold-500:#FF9F1C;   /* মেরিগোল্ড কমলা */
+  --gold-300:#FFD166;   /* হালকা মেরিগোল্ড/কেনারি হলুদ */
+
+  --bg:#FDF3FF;
+  --card:#FFFDF9;
+  --ink:#2B1140;        /* গাঢ় বেগুনি-কালো লেখা */
+  --muted:#7A5F94;      /* হালকা বেগুনি-ধূসর */
+  --border:#EAD9F7;
+
+  --danger:#D7263D;      --danger-bg:#FFE1E6;
+  --success:#06A77D;     --success-bg:#D9F7ED;
+  --amber-bg:#FFEFD2;
+  --plum:#7B2CBF;        --plum-bg:#F0E3FC;
+  --blue:#0388A6;        --blue-bg:#D9F4F8;
+  --rose:#E0117F;        --rose-bg:#FCE0EF;
+  --indigo:#5B21B6;      --indigo-bg:#EDE1FB;
+
+  /* "সাদা লেখা"-এর বদলে ব্যবহারের জন্য উজ্জ্বল কেনারি হলুদ */
+  --canary:#FFD966;
+  --canary-soft:#FFE9A8;
+
+  --radius:16px;
+  --shadow: 0 2px 6px rgba(91,33,182,.10), 0 10px 26px rgba(214,0,109,.10);
+}
+
+/* ---------- ব্যাকগ্রাউন্ড: হালকা রঙিন মেশ + বিন্দু বিন্দু প্যাটার্ন ---------- */
+body{
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255,159,28,.16), transparent 42%),
+    radial-gradient(circle at 92% 18%, rgba(6,174,213,.16), transparent 40%),
+    radial-gradient(circle at 15% 92%, rgba(123,44,191,.14), transparent 45%),
+    radial-gradient(circle at 88% 88%, rgba(214,0,109,.13), transparent 45%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+/* ---------- হেডার: ডাই করা কাপড়ের মতো ওমব্রে গ্র্যাডিয়েন্ট ---------- */
+header.top{
+  background:linear-gradient(120deg, var(--teal-900) 0%, #7A1489 45%, var(--teal-800) 100%) !important;
+  box-shadow: 0 10px 24px rgba(59,10,102,.28);
+}
+.brand-text h1{ color:var(--canary) !important; text-shadow:0 1px 0 rgba(0,0,0,.12); }
+.brand-text p{ color:#F3D9FF !important; }
+.userbar span{ color:var(--canary-soft) !important; }
+.userbar .btn-ghost{ color:var(--canary) !important; border-color:rgba(255,217,102,.55) !important; }
+.tab-btn{ color:#E3C9F5 !important; }
+.tab-btn.active{ color:var(--canary) !important; }
+.tab-btn.active::after{
+  background-image: linear-gradient(90deg, var(--gold-500), var(--rose), var(--teal-500)) !important;
+  height:4px;
+}
+
+/* স্বাচ স্ট্রিপকে রঙধনু-থ্রেড স্পুলে পরিণত করা */
+.swatch-strip{ height:8px; }
+.swatch-strip span{ background:none !important; }
+.swatch-strip span:nth-child(1){ background:var(--gold-500) !important; }
+.swatch-strip span:nth-child(2){ background:var(--success) !important; }
+.swatch-strip span:nth-child(3){ background:var(--plum) !important; }
+.swatch-strip span:nth-child(4){ background:var(--teal-500) !important; }
+.swatch-strip span:nth-child(5){ background:var(--danger) !important; }
+.swatch-strip span:nth-child(6){ background:var(--rose) !important; }
+
+/* ---------- বাটন: রঙিন গ্র্যাডিয়েন্ট, লেখা কেনারি হলুদ ---------- */
+.btn-primary{
+  background:linear-gradient(135deg, var(--teal-800), #8B1FB0) !important;
+  color:var(--canary) !important;
+  box-shadow:0 6px 14px rgba(214,0,109,.30);
+}
+.btn-primary:hover{ background:linear-gradient(135deg, var(--teal-700), #711A8F) !important; }
+.btn-gold{ background:linear-gradient(135deg, var(--gold-500), var(--rose)) !important; color:#3A1200 !important; }
+.btn-gold:hover{ background:linear-gradient(135deg, var(--gold-600), var(--teal-700)) !important; }
+.btn-ghost{ color:var(--teal-800); border-color:var(--border); }
+.btn-ghost:hover{ border-color:var(--teal-500); color:var(--teal-500); }
+.seg{ background:#F4E9FF; }
+.seg button{ color:var(--muted); }
+.seg button.active{
+  background:linear-gradient(135deg, var(--teal-800), var(--plum)) !important;
+  color:var(--canary) !important;
+}
+
+/* ---------- কার্ড: হালকা রঙিন আভা + টপ বার আগের থেকেই ভ্যারিয়েবল থেকে রঙিন ---------- */
+.card{ box-shadow:0 2px 8px rgba(91,33,182,.08), 0 8px 20px rgba(6,174,213,.08); }
+.card .icon-chip{ box-shadow:0 4px 10px rgba(59,10,102,.22); }
+
+/* ---------- টেবিল ও প্যানেল হেডারের হালকা রঙিন ব্যাকগ্রাউন্ড ---------- */
+thead th{ background:linear-gradient(90deg, #F3E4FF, #E4F8FB) !important; }
+tbody tr:hover{ background:#FDF3FA !important; }
+.item-row{ background:#FFF6E6 !important; border-color:var(--border); }
+.totals-box{ background:linear-gradient(90deg, #E9FBF6, #F3E7FF) !important; }
+.field input, .field select, .field textarea{ background:#FEFBFF !important; }
+.pw-eye:hover{ background:#F4E9FF !important; }
+
+/* ---------- ট্যাগ চিপ — আগের ভ্যারিয়েবল থেকেই রঙিন, বাড়তি জোর ---------- */
+.tag{ font-weight:700; }
+
+/* ---------- বিভাগ শিরোনাম ও সেকশন হেড ---------- */
+.section-head h2{
+  background:linear-gradient(90deg, var(--teal-800), var(--plum));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.panel h3{ color:var(--teal-800); }
+.empty-state b{ color:var(--plum); }
+
+/* ---------- সেলাই লাইন — রঙধনু ড্যাশ ---------- */
+.stitch{
+  border-top:none; height:3px; opacity:.9; border-radius:2px;
+  background-image:repeating-linear-gradient(90deg,
+    var(--gold-500) 0 10px, transparent 10px 14px,
+    var(--rose) 14px 24px, transparent 24px 28px,
+    var(--teal-500) 28px 38px, transparent 38px 42px,
+    var(--plum) 42px 52px, transparent 52px 56px);
+}
+
+/* ---------- লগইন কার্ডের রঙিন শীর্ষ-বর্ডার ---------- */
+.login-card{
+  border-top:5px solid transparent;
+  border-image:linear-gradient(90deg, var(--gold-500), var(--rose), var(--teal-500), var(--plum)) 1;
+}
+#loadingBanner{
+  background:linear-gradient(90deg, var(--gold-500), var(--rose)) !important;
+  color:#3A1200 !important;
+}
+
+/* ---------- ব্র্যান্ড প্যানেলের বাম বর্ডার আরও রঙিন ---------- */
+.brand-panel{ border-left:4px solid var(--rose) !important; }
+
+/* ছোট স্ক্রিনে হেডারের কালার আরেকটু গাঢ় রাখা কনট্রাস্টের জন্য */
+@media (max-width:600px){
+  header.top{ background:linear-gradient(160deg, var(--teal-900) 0%, var(--teal-800) 100%) !important; }
+}
