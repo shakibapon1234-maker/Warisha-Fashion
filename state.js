@@ -64,12 +64,12 @@ export async function loadAll() {
       ...s, memo_no: s.memo_no || '', total: Number(s.total), paid: Number(s.paid), due: Number(s.due), payment_method: s.payment_method || 'cash',
       items: (s.sale_items || []).map(i => ({ product_id: i.product_id, name: i.name, qty: Number(i.qty), price: Number(i.price) }))
     }));
-    DB.payments_customer = (pcR.data || []).map(x => ({ ...x, amount: Number(x.amount) }));
-    DB.payments_supplier = (psR.data || []).map(x => ({ ...x, amount: Number(x.amount) }));
-    DB.investments = (invR.data || []).map(x => ({ ...x, amount: Number(x.amount) }));
-    DB.advances_customer = (acR.data || []).map(x => ({ ...x, amount: Number(x.amount) }));
-    DB.advances_supplier = (asR.data || []).map(x => ({ ...x, amount: Number(x.amount) }));
-    DB.expenses = (expR.data || []).map(x => ({ ...x, amount: Number(x.amount) }));
+    DB.payments_customer = (pcR.data || []).map(x => ({ ...x, amount: Number(x.amount), payment_method: x.payment_method || 'cash', payment_account_id: x.payment_account_id || null }));
+    DB.payments_supplier = (psR.data || []).map(x => ({ ...x, amount: Number(x.amount), payment_method: x.payment_method || 'cash', payment_account_id: x.payment_account_id || null }));
+    DB.investments = (invR.data || []).map(x => ({ ...x, amount: Number(x.amount), payment_method: x.payment_method || 'cash', payment_account_id: x.payment_account_id || null }));
+    DB.advances_customer = (acR.data || []).map(x => ({ ...x, amount: Number(x.amount), payment_method: x.payment_method || 'cash', payment_account_id: x.payment_account_id || null }));
+    DB.advances_supplier = (asR.data || []).map(x => ({ ...x, amount: Number(x.amount), payment_method: x.payment_method || 'cash', payment_account_id: x.payment_account_id || null }));
+    DB.expenses = (expR.data || []).map(x => ({ ...x, amount: Number(x.amount), payment_method: x.payment_method || 'cash', payment_account_id: x.payment_account_id || null }));
     DB.payment_accounts = paR.data || [];
   } catch (e) {
     console.error(e); alert('ডেটা লোড করতে সমস্যা হয়েছে: ' + (e.message || e));

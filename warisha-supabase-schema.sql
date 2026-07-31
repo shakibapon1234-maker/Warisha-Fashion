@@ -145,6 +145,8 @@ create table if not exists payments_customer (
   amount numeric(12,2) not null,
   date date not null default current_date,
   note text,
+  payment_method text not null default 'cash' check (payment_method in ('cash','bank','mobile_banking')),
+  payment_account_id uuid references payment_accounts(id) on delete set null,
   created_at timestamptz not null default now()
 );
 create index if not exists idx_payments_customer_cust on payments_customer(customer_id);
@@ -155,6 +157,8 @@ create table if not exists payments_supplier (
   amount numeric(12,2) not null,
   date date not null default current_date,
   note text,
+  payment_method text not null default 'cash' check (payment_method in ('cash','bank','mobile_banking')),
+  payment_account_id uuid references payment_accounts(id) on delete set null,
   created_at timestamptz not null default now()
 );
 create index if not exists idx_payments_supplier_sup on payments_supplier(supplier_id);
@@ -168,6 +172,8 @@ create table if not exists investments (
   person text not null,
   amount numeric(12,2) not null,
   note text,
+  payment_method text not null default 'cash' check (payment_method in ('cash','bank','mobile_banking')),
+  payment_account_id uuid references payment_accounts(id) on delete set null,
   created_at timestamptz not null default now()
 );
 
@@ -180,6 +186,8 @@ create table if not exists advances_customer (
   amount numeric(12,2) not null,
   date date not null default current_date,
   note text,
+  payment_method text not null default 'cash' check (payment_method in ('cash','bank','mobile_banking')),
+  payment_account_id uuid references payment_accounts(id) on delete set null,
   created_at timestamptz not null default now()
 );
 create index if not exists idx_advances_customer_cust on advances_customer(customer_id);
@@ -190,6 +198,8 @@ create table if not exists advances_supplier (
   amount numeric(12,2) not null,
   date date not null default current_date,
   note text,
+  payment_method text not null default 'cash' check (payment_method in ('cash','bank','mobile_banking')),
+  payment_account_id uuid references payment_accounts(id) on delete set null,
   created_at timestamptz not null default now()
 );
 create index if not exists idx_advances_supplier_sup on advances_supplier(supplier_id);
@@ -203,6 +213,8 @@ create table if not exists expenses (
   category text not null,
   note text,
   amount numeric(12,2) not null,
+  payment_method text not null default 'cash' check (payment_method in ('cash','bank','mobile_banking')),
+  payment_account_id uuid references payment_accounts(id) on delete set null,
   created_at timestamptz not null default now()
 );
 

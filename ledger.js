@@ -1,7 +1,8 @@
 import { sb } from './supabaseClient.js';
 import { DB, loadAll } from './state.js';
-import { taka, val, todayISO, emptyState, setLoading } from './utils.js';
+import { taka, val, todayISO, emptyState, paymentMethodOptions, setLoading } from './utils.js';
 import { openModal, closeModal } from './modal.js';
+import { resolvePaymentSelection } from './payment-accounts.js';
 
 /* ============================================================ LEDGER */
 let ledgerTab = 'customers';
@@ -48,17 +49,24 @@ export function openCustPaymentModal(customerId) {
   openModal(`
     <h3>বকেয়া আদায় — ${c.name}</h3><div class="stitch"></div>
     <div class="helper" style="margin-bottom:10px;">বর্তমান পাওনা: <b>${taka(c.due)}</b></div>
-    <div class="field"><label>কত টাকা জমা নিচ্ছেন</label><input id="f_amt" type="number"></div>
-    <div class="field"><label>তারিখ</label><input id="f_date" type="date" value="${todayISO()}"></div>
+    <div class="field"><label>কত টাকা জমা নিচ্ছেন</label><input id="f_cpamt" type="number"></div>
+    <div class="field"><label>তারিখ</label><input id="f_cpdate" type="date" value="${todayISO()}"></div>
+    <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_cpmethod" onchange="onPaymentMethodChange('f_cp')">${paymentMethodOptions('cash')}</select></div>
+    <div class="field" id="f_cpAccountWrap"></div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">বাতিল</button>
     <button class="btn btn-primary" onclick="saveCustPayment('${customerId}')">জমা নিন</button></div>`);
 }
 export async function saveCustPayment(customerId) {
-  const amount = Number(val('f_amt') || 0); const c = DB.customers.find(x => x.id === customerId);
+  const amount = Number(val('f_cpamt') || 0); const c = DB.customers.find(x => x.id === customerId);
   if (amount <= 0) { alert('সঠিক পরিমাণ লিখুন'); return; }
   setLoading(true);
   try {
-    await sb.from('payments_customer').insert({ customer_id: customerId, amount, date: val('f_date') || todayISO() });
+    const paymentSel = await resolvePaymentSelection('f_cp');
+    if (!paymentSel) return;
+    await sb.from('payments_customer').insert({
+      customer_id: customerId, amount, date: val('f_cpdate') || todayISO(),
+      payment_method: paymentSel.payment_method, payment_account_id: paymentSel.payment_account_id
+    });
     await sb.from('customers').update({ due: Math.max(0, c.due - amount) }).eq('id', customerId);
     closeModal(); await loadAll(); renderLedger();
   } finally { setLoading(false); }
@@ -68,17 +76,24 @@ export function openSupPaymentModal(supplierId) {
   openModal(`
     <h3>দেনা পরিশোধ — ${s.name}</h3><div class="stitch"></div>
     <div class="helper" style="margin-bottom:10px;">বর্তমান দেনা: <b>${taka(s.due)}</b></div>
-    <div class="field"><label>কত টাকা পরিশোধ করছেন</label><input id="f_amt" type="number"></div>
-    <div class="field"><label>তারিখ</label><input id="f_date" type="date" value="${todayISO()}"></div>
+    <div class="field"><label>কত টাকা পরিশোধ করছেন</label><input id="f_spamt" type="number"></div>
+    <div class="field"><label>তারিখ</label><input id="f_spdate" type="date" value="${todayISO()}"></div>
+    <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_spmethod" onchange="onPaymentMethodChange('f_sp')">${paymentMethodOptions('cash')}</select></div>
+    <div class="field" id="f_spAccountWrap"></div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">বাতিল</button>
     <button class="btn btn-primary" onclick="saveSupPayment('${supplierId}')">পরিশোধ করুন</button></div>`);
 }
 export async function saveSupPayment(supplierId) {
-  const amount = Number(val('f_amt') || 0); const s = DB.suppliers.find(x => x.id === supplierId);
+  const amount = Number(val('f_spamt') || 0); const s = DB.suppliers.find(x => x.id === supplierId);
   if (amount <= 0) { alert('সঠিক পরিমাণ লিখুন'); return; }
   setLoading(true);
   try {
-    await sb.from('payments_supplier').insert({ supplier_id: supplierId, amount, date: val('f_date') || todayISO() });
+    const paymentSel = await resolvePaymentSelection('f_sp');
+    if (!paymentSel) return;
+    await sb.from('payments_supplier').insert({
+      supplier_id: supplierId, amount, date: val('f_spdate') || todayISO(),
+      payment_method: paymentSel.payment_method, payment_account_id: paymentSel.payment_account_id
+    });
     await sb.from('suppliers').update({ due: Math.max(0, s.due - amount) }).eq('id', supplierId);
     closeModal(); await loadAll(); renderLedger();
   } finally { setLoading(false); }

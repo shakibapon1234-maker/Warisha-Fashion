@@ -36,11 +36,15 @@ export function renderDashboard() {
   document.getElementById('dashSupAdv').textContent = taka(t.supAdvBalance);
 
   const low = DB.products.filter(p => p.qty <= 3);
-  document.getElementById('lowStockList').innerHTML = low.length ? low.map(p => `
+  document.getElementById('lowStockList').innerHTML = low.length ? low.map(p => {
+    const meta = [p.color, p.size].filter(Boolean).join(', ');
+    const metaStr = meta ? ` (${meta})` : '';
+    return `
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13.5px;">
-      <span>${p.name} — ${brandName(p.brand_id)} (${p.color}, ${p.size})</span>
+      <span>${p.name} — ${brandName(p.brand_id)}${metaStr}</span>
       <span class="tag low">মাত্র ${p.qty} পিস</span>
-    </div>`).join('') : `<div class="helper">সব প্রোডাক্টের স্টক ঠিক আছে।</div>`;
+    </div>`;
+  }).join('') : `<div class="helper">সব প্রোডাক্টের স্টক ঠিক আছে।</div>`;
 
   const recents = [
     ...DB.sales.map(x => ({ date: x.date, text: `বিক্রয় (${x.sale_type === 'wholesale' ? 'পাইকারি' : 'খুচরা'}) — ${customerName(x.customer_id)}`, amount: x.paid, dir: 'in' })),

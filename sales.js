@@ -69,7 +69,7 @@ export function openSaleModal() {
     </div>
     <div class="row2">
       <div class="field"><label>পেইড হয়েছে</label><input id="f_paid" type="number" value="0" oninput="updateSaleTotals()"></div>
-      <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="f_smethod" onchange="onPaymentMethodChange('f_s')">${paymentMethodOptions('cash')}</select></div>
+      <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_smethod" onchange="onPaymentMethodChange('f_s')">${paymentMethodOptions('cash')}</select></div>
     </div>
     <div class="field" id="f_sAccountWrap"></div>
     <div class="totals-box">

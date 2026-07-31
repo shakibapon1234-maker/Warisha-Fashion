@@ -83,15 +83,21 @@
     <div class="grid-cards">
       <div class="card in">
         <div class="icon-chip"><svg viewBox="0 0 24 24" fill="none"><path d="M12 19V5M12 5l-6 6M12 5l6 6" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="label">মোট ঢুকেছে</div><div class="value num" id="dashIn">৳০</div>
+        <div class="label">মোট ঢুকেছে (ক্যাশ ইন)</div>
+        <div class="helper" style="font-size:11px;margin-bottom:4px;color:rgba(255,255,255,.7);">বিক্রি, বকেয়া আদায় ও মূলধন</div>
+        <div class="value num" id="dashIn">৳০</div>
       </div>
       <div class="card out">
         <div class="icon-chip"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M12 19l-6-6M12 19l6-6" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="label">মোট বেরিয়েছে</div><div class="value num" id="dashOut">৳০</div>
+        <div class="label">মোট বেরিয়েছে (ক্যাশ আউট)</div>
+        <div class="helper" style="font-size:11px;margin-bottom:4px;color:rgba(255,255,255,.7);">পণ্য ক্রয়, খরচ ও দেনা পরিশোধ</div>
+        <div class="value num" id="dashOut">৳০</div>
       </div>
       <div class="card cash">
         <div class="icon-chip"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="2.4" stroke="#fff" stroke-width="2"/></svg></div>
-        <div class="label">হাতে আছে</div><div class="value num" id="dashCash">৳০</div>
+        <div class="label">হাতে আছে (ক্যাশ ব্যালেন্স)</div>
+        <div class="helper" style="font-size:11px;margin-bottom:4px;color:rgba(255,255,255,.7);">ঢুকেছে - বেরিয়েছে</div>
+        <div class="value num" id="dashCash">৳০</div>
       </div>
     </div>
     <div class="grid-cards">
@@ -140,7 +146,11 @@
   <section id="tab-purchases">
     <div class="section-head">
       <div><h2>ক্রয়</h2><div class="sub">ব্র্যান্ড ও সোর্স অনুযায়ী স্টক যোগ হবে (বিক্রয়মূল্য ছাড়া)</div></div>
-      <button class="btn btn-primary" onclick="openPurchaseModal()">+ নতুন ক্রয়</button>
+      <div class="row-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportPurchasesPDF()">🖨️ প্রিন্ট / PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportPurchasesExcel()">📊 Excel</button>
+        <button class="btn btn-primary" onclick="openPurchaseModal()">+ নতুন ক্রয়</button>
+      </div>
     </div>
     <div class="field" style="margin-bottom:12px;">
       <input type="search" id="purchaseSearchInput" placeholder="🔍 মেমো নম্বর, ব্র্যান্ড বা সোর্স দিয়ে খুঁজুন..." oninput="renderPurchases()">
@@ -151,7 +161,11 @@
   <section id="tab-sales">
     <div class="section-head">
       <div><h2>বিক্রয়</h2><div class="sub">পাইকারি ও খুচরা আলাদাভাবে দেখা যাবে</div></div>
-      <button class="btn btn-primary" onclick="openSaleModal()">+ নতুন বিক্রয়</button>
+      <div class="row-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportSalesPDF()">🖨️ প্রিন্ট / PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportSalesExcel()">📊 Excel</button>
+        <button class="btn btn-primary" onclick="openSaleModal()">+ নতুন বিক্রয়</button>
+      </div>
     </div>
     <div class="row2" style="margin-bottom:12px; align-items:center;">
       <div class="seg" id="salesFilterSeg" style="margin:0;"></div>
@@ -177,19 +191,38 @@
   <section id="tab-expenses">
     <div class="section-head">
       <div><h2>খরচ</h2><div class="sub">দোকান ভাড়া, বিদ্যুৎ, আনুষঙ্গিক খরচ</div></div>
-      <button class="btn btn-primary" onclick="openExpenseModal()">+ নতুন খরচ</button>
+      <div class="row-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportExpensesPDF()">🖨️ প্রিন্ট / PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportExpensesExcel()">📊 Excel</button>
+        <button class="btn btn-primary" onclick="openExpenseModal()">+ নতুন খরচ</button>
+      </div>
     </div>
     <div class="table-wrap"><div id="expensesTable"></div></div>
   </section>
 
   <section id="tab-reports">
-    <div class="section-head"><div><h2>রিপোর্ট</h2><div class="sub">তারিখ অনুযায়ী হিসাব</div></div></div>
+    <div class="section-head">
+      <div><h2>রিপোর্ট</h2><div class="sub">তারিখ অনুযায়ী সম্পূর্ণ হিসাব ও রিপোর্ট</div></div>
+      <div class="row-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportReportPDF()">🖨️ প্রিন্ট / PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportReportExcel()">📊 Excel ডাউনলোড</button>
+      </div>
+    </div>
     <div class="panel">
       <div class="row2">
-        <div class="field"><label>শুরু</label><input type="date" id="repFrom"></div>
-        <div class="field"><label>শেষ</label><input type="date" id="repTo"></div>
+        <div class="field"><label>তারিখ শুরু</label><input type="date" id="repFrom" onchange="renderReport()"></div>
+        <div class="field"><label>তারিখ শেষ</label><input type="date" id="repTo" onchange="renderReport()"></div>
       </div>
-      <button class="btn btn-gold" onclick="renderReport()">হিসাব দেখুন</button>
+      <div class="field" style="margin-top:8px;">
+        <label style="margin-bottom:6px;">কুইক তারাক সিলেক্টর</label>
+        <div class="row-actions" style="flex-wrap:wrap;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="setQuickDate('today')">আজ</button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuickDate('yesterday')">গতকাল</button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuickDate('this_week')">এই সপ্তাহ</button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuickDate('this_month')">এই মাস</button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuickDate('all')">সব লেনদেন</button>
+        </div>
+      </div>
     </div>
     <div class="grid-cards" id="reportCards"></div>
     <div class="table-wrap"><div id="reportTable"></div></div>

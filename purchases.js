@@ -63,7 +63,7 @@ export function openPurchaseModal() {
     </div>
     <div class="row2">
       <div class="field"><label>পেইড হয়েছে</label><input id="f_ppaid" type="number" value="0" oninput="updatePurchaseTotals()"></div>
-      <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="f_pmethod" onchange="onPaymentMethodChange('f_p')">${paymentMethodOptions('cash')}</select></div>
+      <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_pmethod" onchange="onPaymentMethodChange('f_p')">${paymentMethodOptions('cash')}</select></div>
     </div>
     <div class="field" id="f_pAccountWrap"></div>
     <div class="totals-box">
