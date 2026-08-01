@@ -18,6 +18,7 @@ export function renderSettings() {
   });
   renderPaymentAccountsSettings();
   renderBackupAndSyncSettings();
+  renderDangerZoneSettings();
 }
 
 export function renderBackupAndSyncSettings() {
@@ -58,6 +59,61 @@ export function renderBackupAndSyncSettings() {
       `}
       <button class="btn btn-gold" onclick="fixSyncGuardDiscrepancies()">🔄 সিঙ্ক রিক্যালকুলেট ও ফিক্স করুন</button>
     </div>`;
+}
+
+/* ---------------------------------------------------------- ডেঞ্জার জোন — সব ডেটা মুছে ফেলুন */
+const CLEAR_ALL_CONFIRM_PHRASE = 'মুছে ফেলুন';
+
+export function renderDangerZoneSettings() {
+  const wrap = document.getElementById('dangerZoneSettings');
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div class="panel settings-panel" style="max-width:560px;border-left:4px solid var(--danger);">
+      <h3 style="color:var(--danger);">⚠️ বিপজ্জনক এলাকা — সব ডেটা মুছে ফেলুন</h3>
+      <div class="helper" style="margin-bottom:12px;">
+        এই বাটনে চাপ দিলে ব্র্যান্ড, প্রোডাক্ট, ক্রয়, বিক্রয়, কাস্টমার, সাপ্লায়ার, পাওনা-দেনা, মূলধন, খরচ ও পেমেন্ট মাধ্যম — সব ডেটা <b>স্থায়ীভাবে</b> মুছে যাবে এবং অ্যাপ একদম ফ্রেশ অবস্থায় চলে যাবে (লগইন অ্যাকাউন্ট অক্ষত থাকবে)। প্র্যাকটিসের ডেটা পরিষ্কার করতে চাইলে এটা ব্যবহার করুন — কিন্তু আসল হিসাব থাকলে আগে অবশ্যই ব্যাকআপ ডাউনলোড করে নিন, কারণ এই কাজ ফিরিয়ে আনা যাবে না।
+      </div>
+      <button class="btn" style="background:var(--danger);color:#fff;" onclick="handleClearAllData()">🗑️ সব ডেটা মুছে ফ্রেশ স্টার্ট করুন</button>
+    </div>`;
+}
+
+export async function handleClearAllData() {
+  const warned = confirm(
+    'সতর্কতা!\n\nএই কাজটি আপনার সব ব্র্যান্ড, প্রোডাক্ট, ক্রয়, বিক্রয়, কাস্টমার, সাপ্লায়ার, পাওনা-দেনা, মূলধন, খরচ ও পেমেন্ট মাধ্যম — সব ডেটা স্থায়ীভাবে মুছে ফেলবে। এটা আর ফিরিয়ে আনা যাবে না।\n\nচালিয়ে যেতে চাইলে "ঠিক আছে" চাপুন।'
+  );
+  if (!warned) return;
+
+  const typed = prompt(`নিশ্চিত করতে নিচের বাক্সে হুবহু লিখুনঃ ${CLEAR_ALL_CONFIRM_PHRASE}`);
+  if (typed === null) return;
+  if (typed.trim() !== CLEAR_ALL_CONFIRM_PHRASE) {
+    alert('লেখাটি মিলেনি, তাই কোনো ডেটা মুছা হয়নি।');
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const NIL_UUID = '00000000-0000-0000-0000-000000000000';
+    // নির্ভরতা (foreign key) অনুযায়ী সঠিক ক্রমে টেবিল খালি করা হচ্ছে
+    const tablesInOrder = [
+      'sales', 'purchases',
+      'payments_customer', 'payments_supplier',
+      'investments', 'advances_customer', 'advances_supplier',
+      'expenses',
+      'products', 'customers', 'suppliers', 'brands',
+      'payment_accounts',
+    ];
+    for (const table of tablesInOrder) {
+      const { error } = await sb.from(table).delete().neq('id', NIL_UUID);
+      if (error) {
+        alert(`"${table}" টেবিলের ডেটা মুছতে সমস্যা হয়েছে: ${error.message}\n\nবাকি ধাপ থেমে গেছে, আংশিক ডেটা মুছা হয়ে থাকতে পারে।`);
+        return;
+      }
+    }
+    alert('সব ডেটা সফলভাবে মুছে ফেলা হয়েছে। অ্যাপটি এখন রিফ্রেশ হবে।');
+    location.reload();
+  } finally {
+    setLoading(false);
+  }
 }
 
 export function onBackupFileSelected(input) {
@@ -147,3 +203,4 @@ window.handleUpdatePassword = handleUpdatePassword;
 window.addPaymentAccount = addPaymentAccount;
 window.deletePaymentAccount = deletePaymentAccount;
 window.onBackupFileSelected = onBackupFileSelected;
+window.handleClearAllData = handleClearAllData;
