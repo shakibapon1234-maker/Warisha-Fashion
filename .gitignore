@@ -1,0 +1,10 @@
+# LocalWP / Server generated directories
+app/
+conf/
+logs/
+
+# Environment and OS files
+.env
+.env.local
+.DS_Store
+Thumbs.db
