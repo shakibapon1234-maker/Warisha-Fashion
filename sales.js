@@ -86,6 +86,17 @@ export function openSaleModal() {
   buildSaleTypeSeg();
   renderSaleRows();
 }
+export function setSaleType(t) {
+  currentSaleType = t;
+  buildSaleTypeSeg();
+}
+export function buildSaleTypeSeg() {
+  const el = document.getElementById('saleTypeSeg');
+  if (!el) return;
+  const opts = [['retail', 'খুচরা'], ['wholesale', 'পাইকারি']];
+  el.innerHTML = opts.map(([k, l]) =>
+    `<button class="${currentSaleType === k ? 'active' : ''}" onclick="setSaleType('${k}')">${l}</button>`).join('');
+}
 export function syncSaleRowsFromDOM() {
   const container = document.getElementById('itemRows');
   if (!container) return;
