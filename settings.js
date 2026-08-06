@@ -17,6 +17,7 @@ export function renderSettings() {
     if (curEmail) curEmail.value = data?.user?.email || '';
   });
   renderPaymentAccountsSettings();
+  renderSecurityQuestionsSettings();
   renderBackupAndSyncSettings();
   renderDangerZoneSettings();
 }
@@ -198,9 +199,74 @@ export async function handleUpdatePassword() {
   document.getElementById('setNewPw2').value = '';
 }
 
+export function renderSecurityQuestionsSettings() {
+  const wrap = document.getElementById('securityQuestionsSettings');
+  if (!wrap) return;
+
+  let saved = null;
+  try {
+    const raw = localStorage.getItem('warisha_sec_questions');
+    if (raw) saved = JSON.parse(raw);
+  } catch (e) {}
+
+  wrap.innerHTML = `
+    <div class="panel settings-panel" style="max-width:560px;">
+      <h3>🛡️ সিকিউরিটি কোশ্চেন সেটিংস (পাসওয়ার্ড রিকভারি)</h3>
+      <div class="helper" style="margin-bottom:12px;">
+        পাসওয়ার্ড ভুলে গেলে এই প্রশ্নগুলোর সঠিক উত্তর দিয়ে আপনি সহজেই পাসওয়ার্ড রিসেট করতে পারবেন।
+      </div>
+      <div class="field">
+        <label>প্রশ্ন ১</label>
+        <select id="secQ1">
+          <option value="আপনার প্রিয় শহরের নাম কী?" ${saved?.q1 === 'আপনার প্রিয় শহরের নাম কী?' ? 'selected' : ''}>আপনার প্রিয় শহরের নাম কী?</option>
+          <option value="আপনার প্রথম প্রাইমারি স্কুলের নাম কী?" ${saved?.q1 === 'আপনার প্রথম প্রাইমারি স্কুলের নাম কী?' ? 'selected' : ''}>আপনার প্রথম প্রাইমারি স্কুলের নাম কী?</option>
+          <option value="আপনার প্রিয় খাবারের নাম কী?" ${saved?.q1 === 'আপনার প্রিয় খাবারের নাম কী?' ? 'selected' : ''}>আপনার প্রিয় খাবারের নাম কী?</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>উত্তর ১</label>
+        <input id="secAns1" value="${saved?.a1 || ''}" placeholder="গোপন উত্তর লিখুন">
+      </div>
+      <div class="field">
+        <label>প্রশ্ন ২</label>
+        <select id="secQ2">
+          <option value="আপনার প্রিয় রঙের নাম কী?" ${saved?.q2 === 'আপনার প্রিয় রঙের নাম কী?' ? 'selected' : ''}>আপনার প্রিয় রঙের নাম কী?</option>
+          <option value="আপনার প্রিয় খেলার নাম কী?" ${saved?.q2 === 'আপনার প্রিয় খেলার নাম কী?' ? 'selected' : ''}>আপনার প্রিয় খেলার নাম কী?</option>
+          <option value="আপনার শৈশবের বন্ধুর নাম কী?" ${saved?.q2 === 'আপনার শৈশবের বন্ধুর নাম কী?' ? 'selected' : ''}>আপনার শৈশবের বন্ধুর নাম কী?</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>উত্তর ২</label>
+        <input id="secAns2" value="${saved?.a2 || ''}" placeholder="গোপন উত্তর লিখুন">
+      </div>
+      <div id="secQMsg" class="helper" style="display:none;margin-bottom:8px;"></div>
+      <button class="btn btn-primary" onclick="saveSecurityQuestionsSettings()">💾 সিকিউরিটি প্রশ্ন সেভ করুন</button>
+    </div>`;
+}
+
+export function saveSecurityQuestionsSettings() {
+  const q1 = val('secQ1'), a1 = val('secAns1').trim().toLowerCase();
+  const q2 = val('secQ2'), a2 = val('secAns2').trim().toLowerCase();
+  const msg = document.getElementById('secQMsg');
+  if (msg) msg.style.display = 'block';
+
+  if (!a1 || !a2) {
+    if (msg) { msg.style.color = 'var(--danger)'; msg.textContent = 'দুইটি প্রশ্নেরই উত্তর দিন'; }
+    return;
+  }
+  const data = { q1, a1, q2, a2 };
+  localStorage.setItem('warisha_sec_questions', JSON.stringify(data));
+  sb.auth.updateUser({ data: { sec_q: data } }).catch(() => {});
+  if (msg) {
+    msg.style.color = 'var(--success)';
+    msg.textContent = '✅ সিকিউরিটি প্রশ্ন সফলভাবে সেভ করা হয়েছে!';
+  }
+}
+
 window.handleUpdateEmail = handleUpdateEmail;
 window.handleUpdatePassword = handleUpdatePassword;
 window.addPaymentAccount = addPaymentAccount;
 window.deletePaymentAccount = deletePaymentAccount;
 window.onBackupFileSelected = onBackupFileSelected;
 window.handleClearAllData = handleClearAllData;
+window.saveSecurityQuestionsSettings = saveSecurityQuestionsSettings;

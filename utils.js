@@ -45,7 +45,10 @@ export function togglePw(id, btn) {
   if (!el) return;
   const show = el.type === 'password';
   el.type = show ? 'text' : 'password';
-  btn.classList.toggle('showing', show);
+  const targetBtn = (btn && btn.closest) ? (btn.closest('.pw-eye') || btn) : btn;
+  if (targetBtn) {
+    targetBtn.classList.toggle('showing', show);
+  }
 }
 window.togglePw = togglePw;
 

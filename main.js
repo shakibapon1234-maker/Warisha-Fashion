@@ -3,6 +3,7 @@
    প্রতিটা ফিচার তার নিজের js/*.js ফাইলে থাকে; onclick হ্যান্ডলারের জন্য
    দরকারি ফাংশনগুলো সংশ্লিষ্ট ফাইলের নিচেই window-এ অ্যাসাইন করা আছে।
    ========================================================== */
+import './utils.js';
 import { initModal } from './modal.js';
 import './payment-accounts.js';
 import './catalog.js';
