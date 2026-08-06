@@ -81,7 +81,12 @@ export function openSaleModal() {
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">বাতিল</button>
-      <button class=export function syncSaleRowsFromDOM() {
+      <button class="btn btn-primary" onclick="saveSale()">বিক্রয় সেভ করুন</button>
+    </div>`);
+  buildSaleTypeSeg();
+  renderSaleRows();
+}
+export function syncSaleRowsFromDOM() {
   const container = document.getElementById('itemRows');
   if (!container) return;
   const rows = container.querySelectorAll('.item-row');
