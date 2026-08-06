@@ -107,6 +107,20 @@ export async function saveProduct(id) {
   closeModal(); await loadAll(); renderCatalog();
 }
 export async function deleteProduct(id) {
+  // Check if this product is used in any purchase
+  const { data: usedInPurchase, error: checkError } = await sb
+    .from('purchase_items')
+    .select('id')
+    .eq('product_id', id)
+    .limit(1);
+
+  if (checkError) { alert('ত্রুটি: ' + checkError.message); return; }
+
+  if (usedInPurchase && usedInPurchase.length > 0) {
+    alert('এই প্রোডাক্টটি ডিলিট করা যাবে না।\n\nকারণ: এই প্রোডাক্টের ক্রয়ের ইতিহাস আছে। ক্রয়ের রেকর্ড মুছলে তারপর এটি ডিলিট করতে পারবেন।');
+    return;
+  }
+
   if (!confirm('এই প্রোডাক্টটি ডিলিট করবেন?')) return;
   const { error } = await sb.from('products').delete().eq('id', id);
   if (error) { alert('ডিলিট ব্যর্থ: ' + error.message); return; }

@@ -96,8 +96,8 @@ export function renderPurchaseRows() {
             <option value="__new__" ${it.product_id === '__new__' ? 'selected' : ''}>➕ নতুন প্রোডাক্ট</option>
           </select>
         </div>
-        <div class="field" style="margin:0;"><label>Quantity</label><input type="number" min="1" value="${it.qty}" oninput="onPurchaseQtyChange(${idx}, this.value)"></div>
-        <div class="field" style="margin:0;"><label>ক্রয়মূল্য/পিস</label><input type="number" value="${it.cost}" oninput="onPurchaseCostChange(${idx}, this.value)"></div>
+        <div class="field" style="margin:0;"><label>Quantity</label><input type="number" min="1" value="${it.qty}" oninput="onPurchaseQtyInput(${idx}, this.value)" onchange="onPurchaseQtyChange(${idx}, this.value)"></div>
+        <div class="field" style="margin:0;"><label>ক্রয়মূল্য/পিস</label><input type="number" value="${it.cost}" oninput="onPurchaseCostInput(${idx}, this.value)" onchange="onPurchaseCostChange(${idx}, this.value)"></div>
         ${purchaseItems.length > 1 ? `<button class="remove-row" onclick="removePurchaseRow(${idx})">✕</button>` : '<span></span>'}
       </div>
       ${it.product_id === '__new__' ? `
@@ -114,7 +114,11 @@ export function onPurchaseProductChange(idx, pid) {
   if (pid && pid !== '__new__') { const p = DB.products.find(x => x.id === pid); purchaseItems[idx].name = p.name; purchaseItems[idx].cost = p.buy_price; }
   renderPurchaseRows();
 }
-export function onPurchaseQtyChange(idx, v) { purchaseItems[idx].qty = Number(v || 1); renderPurchaseRows(); }
+// oninput: শুধু total আপডেট করে, DOM re-render করে না — typing বাধাগ্রস্ত হয় না
+export function onPurchaseQtyInput(idx, v)  { purchaseItems[idx].qty  = Number(v || 1); updatePurchaseTotals(); }
+export function onPurchaseCostInput(idx, v) { purchaseItems[idx].cost = Number(v || 0); updatePurchaseTotals(); }
+// onchange: blur/Enter-এ পুরো row re-render করে line-total আপডেটের জন্য
+export function onPurchaseQtyChange(idx, v)  { purchaseItems[idx].qty  = Number(v || 1); renderPurchaseRows(); }
 export function onPurchaseCostChange(idx, v) { purchaseItems[idx].cost = Number(v || 0); renderPurchaseRows(); }
 export function onPurchaseNewNameChange(idx, v) { purchaseItems[idx].new_name = v; }
 export function onPurchaseNewMetaChange(idx, v) { purchaseItems[idx].new_meta = v; }
@@ -206,6 +210,8 @@ window.renderPurchaseRows = renderPurchaseRows;
 window.onPurchaseProductChange = onPurchaseProductChange;
 window.onPurchaseQtyChange = onPurchaseQtyChange;
 window.onPurchaseCostChange = onPurchaseCostChange;
+window.onPurchaseQtyInput = onPurchaseQtyInput;
+window.onPurchaseCostInput = onPurchaseCostInput;
 window.onPurchaseNewNameChange = onPurchaseNewNameChange;
 window.onPurchaseNewMetaChange = onPurchaseNewMetaChange;
 window.addPurchaseRow = addPurchaseRow;

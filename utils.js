@@ -8,7 +8,11 @@ export function taka(n) {
   return "৳" + Number(n || 0).toLocaleString('en-US');
 }
 export function dateBn(iso) {
-  return new Date(iso).toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
+  // ISO string (YYYY-MM-DD) কে UTC হিসেবে parse করলে local timezone-এ একদিন পিছিয়ে যায়
+  // তাই manually parse করে local date তৈরি করা হচ্ছে
+  const [y, m, d] = (iso || '').split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  return date.toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 export function val(id) {
   const el = document.getElementById(id);
