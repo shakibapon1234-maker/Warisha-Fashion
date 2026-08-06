@@ -81,16 +81,22 @@ export function openSaleModal() {
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">বাতিল</button>
-      <button class="btn btn-primary" onclick="saveSale()">বিক্রয় সেভ করুন</button>
-    </div>`);
-  buildSaleTypeSeg();
-  renderSaleRows();
-}
-export function setSaleType(t) { currentSaleType = t; buildSaleTypeSeg(); }
-export function buildSaleTypeSeg() {
-  document.getElementById('saleTypeSeg').innerHTML = `
-    <button class="${currentSaleType === 'retail' ? 'active' : ''}" onclick="setSaleType('retail')">খুচরা</button>
-    <button class="${currentSaleType === 'wholesale' ? 'active' : ''}" onclick="setSaleType('wholesale')">পাইকারি</button>`;
+      <button class=export function syncSaleRowsFromDOM() {
+  const container = document.getElementById('itemRows');
+  if (!container) return;
+  const rows = container.querySelectorAll('.item-row');
+  rows.forEach((rowEl, idx) => {
+    if (!saleItems[idx]) return;
+    const sel = rowEl.querySelector('select');
+    const inputs = rowEl.querySelectorAll('input');
+    if (sel) {
+      saleItems[idx].product_id = sel.value;
+      const p = DB.products.find(x => x.id === sel.value);
+      if (p) saleItems[idx].name = p.name;
+    }
+    if (inputs[0]) saleItems[idx].qty = Number(inputs[0].value || 1);
+    if (inputs[1]) saleItems[idx].price = Number(inputs[1].value || 0);
+  });
 }
 function productOptions(selectedId) { return DB.products.map(p => `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${p.name} — ${brandName(p.brand_id)} (স্টক ${p.qty})</option>`).join(''); }
 export function renderSaleRows() {
@@ -108,15 +114,31 @@ export function renderSaleRows() {
     </div>`).join('');
   updateSaleTotals();
 }
-export function onSaleProductChange(idx, pid) { const p = DB.products.find(x => x.id === pid); saleItems[idx].product_id = pid; saleItems[idx].name = p ? p.name : ''; renderSaleRows(); }
+export function onSaleProductChange(idx, pid) {
+  const p = DB.products.find(x => x.id === pid);
+  saleItems[idx].product_id = pid;
+  saleItems[idx].name = p ? p.name : '';
+  if (p && !saleItems[idx].price) {
+    saleItems[idx].price = p.buy_price || 0;
+  }
+  renderSaleRows();
+}
 // oninput: শুধু total আপডেট, DOM re-render না — typing স্বাভাবিক থাকে
 export function onSaleQtyInput(idx, v)   { saleItems[idx].qty   = Number(v || 1); updateSaleTotals(); }
 export function onSalePriceInput(idx, v) { saleItems[idx].price = Number(v || 0); updateSaleTotals(); }
 // onchange: blur/Enter-এ row re-render করে line-total ঠিক দেখায়
 export function onSaleQtyChange(idx, v)   { saleItems[idx].qty   = Number(v || 1); renderSaleRows(); }
 export function onSalePriceChange(idx, v) { saleItems[idx].price = Number(v || 0); renderSaleRows(); }
-export function addSaleRow() { saleItems.push({ product_id: '', qty: 1, price: 0 }); renderSaleRows(); }
-export function removeSaleRow(idx) { saleItems.splice(idx, 1); renderSaleRows(); }
+export function addSaleRow() {
+  syncSaleRowsFromDOM();
+  saleItems.push({ product_id: '', qty: 1, price: 0 });
+  renderSaleRows();
+}
+export function removeSaleRow(idx) {
+  syncSaleRowsFromDOM();
+  saleItems.splice(idx, 1);
+  renderSaleRows();
+}
 export function updateSaleTotals() {
   const total = saleItems.reduce((s, i) => s + i.qty * i.price, 0);
   const paid = Number(val('f_paid') || 0);
@@ -124,6 +146,7 @@ export function updateSaleTotals() {
   document.getElementById('sDue').textContent = taka(Math.max(0, total - paid));
 }
 export async function saveSale() {
+  syncSaleRowsFromDOM();
   const cname = val('f_cname');
   if (!cname) { alert('কাস্টমারের নাম দিন'); return; }
   const validItems = saleItems.filter(i => i.product_id && i.qty > 0);
@@ -158,67 +181,123 @@ export async function saveSale() {
     closeModal(); await loadAll(); renderSales(); renderCatalog();
   } finally { setLoading(false); }
 }
+
 export function openEditSaleModal(id) {
   const s = DB.sales.find(x => x.id === id);
   if (!s) return;
+  saleItems = s.items.map(i => ({
+    product_id: i.product_id,
+    name: i.name,
+    qty: i.qty,
+    price: i.price
+  }));
+  currentSaleType = s.sale_type || 'retail';
+  const cust = DB.customers.find(c => c.id === s.customer_id);
+  const custName = cust ? cust.name : '';
+  const custPhone = cust ? cust.phone || '' : '';
+
   openModal(`
     <h3>বিক্রয় এডিট করুন</h3><div class="stitch"></div>
-    <div class="helper" style="margin-bottom:12px;">প্রোডাক্ট আইটেম এডিট করতে এন্ট্রিটি ডিলিট করে নতুন করে যোগ করুন।</div>
-    <div class="row2">
-      <div class="field"><label>তারিখ</label><input id="es_date" type="date" value="${s.date}"></div>
-      <div class="field"><label>মেমো নম্বর</label><input id="es_memo" value="${s.memo_no || ''}"></div>
+    <div class="field"><label>ধরন</label>
+      <div class="seg" id="saleTypeSeg"></div>
     </div>
     <div class="row2">
-      <div class="field"><label>পেইড হয়েছে</label><input id="es_paid" type="number" value="${s.paid}" oninput="updateEditSaleDue('${id}')"></div>
-      <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="es_method" onchange="onPaymentMethodChange('es_')">${paymentMethodOptions(s.payment_method)}</select></div>
+      <div class="field"><label>কাস্টমারের নাম</label><input id="f_cname" list="custList" value="${custName}" placeholder="নাম লিখুন">
+        <datalist id="custList">${DB.customers.map(c => `<option value="${c.name}">`).join('')}</datalist>
+      </div>
+      <div class="field"><label>ফোন (ঐচ্ছিক)</label><input id="f_cphone" value="${custPhone}" placeholder="017..."></div>
     </div>
-    <div class="field" id="es_AccountWrap"></div>
+    <div id="itemRows"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addSaleRow()">+ আরও প্রোডাক্ট</button>
+    <div class="row2" style="margin-top:12px;">
+      <div class="field"><label>তারিখ</label><input id="f_sdate" type="date" value="${s.date}"></div>
+      <div class="field"><label>মেমো নম্বর (ঐচ্ছিক)</label><input id="f_smemo" value="${s.memo_no || ''}" placeholder="যেমন: S-101"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>পেইড হয়েছে</label><input id="f_paid" type="number" value="${s.paid}" oninput="updateSaleTotals()"></div>
+      <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_smethod" onchange="onPaymentMethodChange('f_s')">${paymentMethodOptions(s.payment_method)}</select></div>
+    </div>
+    <div class="field" id="f_sAccountWrap"></div>
     <div class="totals-box">
-      <div class="r"><span>সর্বমোট</span><b class="num">${taka(s.total)}</b></div>
-      <div class="r"><span>বাকি থাকবে</span><b id="es_due" class="num" style="color:var(--gold-600)">${taka(Math.max(0, s.total - s.paid))}</b></div>
+      <div class="r"><span>সর্বমোট</span><b id="sTotal" class="num">৳০</b></div>
+      <div class="r"><span>বাকি থাকবে</span><b id="sDue" class="num" style="color:var(--gold-600)">৳০</b></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">বাতিল</button>
-      <button class="btn btn-primary" onclick="saveEditSale('${id}')">আপডেট করুন</button>
+      <button class="btn btn-primary" onclick="saveEditSale('${s.id}')">আপডেট করুন</button>
     </div>`);
+
+  buildSaleTypeSeg();
   if (s.payment_method !== 'cash') {
-    import('./payment-accounts.js').then(m => m.renderPaymentAccountField('es_', s.payment_method, s.payment_account_id));
+    import('./payment-accounts.js').then(m => m.renderPaymentAccountField('f_s', s.payment_method, s.payment_account_id));
   }
+  renderSaleRows();
 }
 export function updateEditSaleDue(id) {
-  const s = DB.sales.find(x => x.id === id);
-  if (!s) return;
-  const paid = Number(document.getElementById('es_paid')?.value || 0);
-  const due = document.getElementById('es_due');
-  if (due) due.textContent = taka(Math.max(0, s.total - paid));
+  updateSaleTotals();
 }
 export async function saveEditSale(id) {
-  const s = DB.sales.find(x => x.id === id);
-  if (!s) return;
-  const newPaid = Number(val('es_paid') || 0);
-  const newDue  = Math.max(0, s.total - newPaid);
+  const oldS = DB.sales.find(x => x.id === id);
+  if (!oldS) return;
+
+  syncSaleRowsFromDOM();
+  const cname = val('f_cname');
+  if (!cname) { alert('কাস্টমারের নাম দিন'); return; }
+  const validItems = saleItems.filter(i => i.product_id && i.qty > 0);
+  if (!validItems.length) { alert('অন্তত একটা প্রোডাক্ট বাছাই করুন'); return; }
+  const total = validItems.reduce((s, i) => s + i.qty * i.price, 0);
+  const paid = Number(val('f_paid') || 0);
+  const due = Math.max(0, total - paid);
+
   setLoading(true);
   try {
-    const paymentSel = await resolvePaymentSelection('es_');
+    const paymentSel = await resolvePaymentSelection('f_s');
     if (!paymentSel) return;
-    const { error } = await sb.from('sales').update({
-      date: val('es_date') || s.date,
-      memo_no: val('es_memo').trim(),
-      paid: newPaid,
-      due: newDue,
+
+    for (const oldIt of oldS.items) {
+      const p = DB.products.find(x => x.id === oldIt.product_id);
+      const revertedQty = (p ? p.qty : 0) + oldIt.qty;
+      await sb.from('products').update({ qty: revertedQty }).eq('id', oldIt.product_id);
+    }
+
+    const oldCust = DB.customers.find(c => c.id === oldS.customer_id);
+    if (oldCust) {
+      const revertedDue = Math.max(0, oldCust.due - oldS.due);
+      await sb.from('customers').update({ due: revertedDue }).eq('id', oldCust.id);
+    }
+
+    const customer = await ensureCustomer(cname, val('f_cphone'));
+    const memoNo = val('f_smemo').trim();
+
+    const { error: serr } = await sb.from('sales').update({
+      date: val('f_sdate') || oldS.date,
+      memo_no: memoNo,
+      sale_type: currentSaleType,
+      customer_id: customer.id,
+      total,
+      paid,
+      due,
       payment_method: paymentSel.payment_method,
       payment_account_id: paymentSel.payment_account_id
     }).eq('id', id);
-    if (error) { alert('আপডেট ব্যর্থ: ' + error.message); return; }
-    // customer due adjust
-    const c = DB.customers.find(x => x.id === s.customer_id);
-    if (c) {
-      const adjustedDue = Math.max(0, c.due - s.due + newDue);
-      await sb.from('customers').update({ due: adjustedDue }).eq('id', c.id);
+    if (serr) { alert('বিক্রয় আপডেট ব্যর্থ: ' + serr.message); return; }
+
+    await sb.from('sale_items').delete().eq('sale_id', id);
+    const itemRows = validItems.map(i => ({ sale_id: id, product_id: i.product_id, name: i.name, qty: i.qty, price: i.price }));
+    await sb.from('sale_items').insert(itemRows);
+
+    for (const it of validItems) {
+      const p = DB.products.find(x => x.id === it.product_id);
+      const newQty = Math.max(0, (p ? p.qty : 0) - it.qty);
+      await sb.from('products').update({ qty: newQty }).eq('id', it.product_id);
     }
-    closeModal(); await loadAll(); renderSales();
+    const currentCust = DB.customers.find(c => c.id === customer.id) || customer;
+    await sb.from('customers').update({ due: currentCust.due + due }).eq('id', customer.id);
+
+    closeModal(); await loadAll(); renderSales(); renderCatalog();
   } finally { setLoading(false); }
 }
+
 export async function deleteSale(id) {
   if (!confirm('এই বিক্রয়টি ডিলিট করবেন? স্টক ও বকেয়া আগের অবস্থায় ফিরে যাবে।')) return;
   const s = DB.sales.find(x => x.id === id);

@@ -84,8 +84,25 @@ export function openPurchaseModal() {
 }
 function currentPurchaseBrandProducts() {
   const bid = val('f_pubrand');
-  if (!bid || bid === '__newbrand__') return [];
+  if (!bid || bid === '__newbrand__') return DB.products;
   return DB.products.filter(p => p.brand_id === bid);
+}
+export function syncPurchaseRowsFromDOM() {
+  const container = document.getElementById('pItemRows');
+  if (!container) return;
+  const rows = container.querySelectorAll('.item-row');
+  rows.forEach((rowEl, idx) => {
+    if (!purchaseItems[idx]) return;
+    const sel = rowEl.querySelector('select');
+    const inputs = rowEl.querySelectorAll('input');
+    if (sel) purchaseItems[idx].product_id = sel.value;
+    if (inputs[0]) purchaseItems[idx].qty = Number(inputs[0].value || 1);
+    if (inputs[1]) purchaseItems[idx].cost = Number(inputs[1].value || 0);
+    if (purchaseItems[idx].product_id === '__new__') {
+      if (inputs[2]) purchaseItems[idx].new_name = inputs[2].value;
+      if (inputs[3]) purchaseItems[idx].new_meta = inputs[3].value;
+    }
+  });
 }
 export function renderPurchaseRows() {
   const prods = currentPurchaseBrandProducts();
@@ -95,7 +112,7 @@ export function renderPurchaseRows() {
         <div class="field" style="margin:0;"><label>প্রোডাক্ট</label>
           <select onchange="onPurchaseProductChange(${idx}, this.value)">
             <option value="">-- বাছাই বা নতুন --</option>
-            ${prods.map(p => `<option value="${p.id}" ${p.id === it.product_id ? 'selected' : ''}>${p.name} (স্টক ${p.qty})</option>`).join('')}
+            ${prods.map(p => `<option value="${p.id}" ${p.id === it.product_id ? 'selected' : ''}>${p.name} — ${brandName(p.brand_id)} (স্টক ${p.qty})</option>`).join('')}
             <option value="__new__" ${it.product_id === '__new__' ? 'selected' : ''}>➕ নতুন প্রোডাক্ট</option>
           </select>
         </div>
@@ -114,7 +131,17 @@ export function renderPurchaseRows() {
 }
 export function onPurchaseProductChange(idx, pid) {
   purchaseItems[idx].product_id = pid;
-  if (pid && pid !== '__new__') { const p = DB.products.find(x => x.id === pid); purchaseItems[idx].name = p.name; purchaseItems[idx].cost = p.buy_price; }
+  if (pid && pid !== '__new__') {
+    const p = DB.products.find(x => x.id === pid);
+    if (p) {
+      purchaseItems[idx].name = p.name;
+      purchaseItems[idx].cost = p.buy_price;
+      const brandSel = document.getElementById('f_pubrand');
+      if (brandSel && !brandSel.value) {
+        brandSel.value = p.brand_id;
+      }
+    }
+  }
   renderPurchaseRows();
 }
 // oninput: শুধু total আপডেট করে, DOM re-render করে না — typing বাধাগ্রস্ত হয় না
@@ -125,8 +152,16 @@ export function onPurchaseQtyChange(idx, v)  { purchaseItems[idx].qty  = Number(
 export function onPurchaseCostChange(idx, v) { purchaseItems[idx].cost = Number(v || 0); renderPurchaseRows(); }
 export function onPurchaseNewNameChange(idx, v) { purchaseItems[idx].new_name = v; }
 export function onPurchaseNewMetaChange(idx, v) { purchaseItems[idx].new_meta = v; }
-export function addPurchaseRow() { purchaseItems.push({ product_id: '', qty: 1, cost: 0 }); renderPurchaseRows(); }
-export function removePurchaseRow(idx) { purchaseItems.splice(idx, 1); renderPurchaseRows(); }
+export function addPurchaseRow() {
+  syncPurchaseRowsFromDOM();
+  purchaseItems.push({ product_id: '', qty: 1, cost: 0 });
+  renderPurchaseRows();
+}
+export function removePurchaseRow(idx) {
+  syncPurchaseRowsFromDOM();
+  purchaseItems.splice(idx, 1);
+  renderPurchaseRows();
+}
 export function updatePurchaseTotals() {
   const total = purchaseItems.reduce((s, i) => s + i.qty * i.cost, 0);
   const paid = Number(val('f_ppaid') || 0);
@@ -134,6 +169,7 @@ export function updatePurchaseTotals() {
   document.getElementById('pDue').textContent = taka(Math.max(0, total - paid));
 }
 export async function savePurchase() {
+  syncPurchaseRowsFromDOM();
   let brandId = val('f_pubrand');
   if (!brandId) { alert('ব্র্যান্ড বাছাই করুন'); return; }
   const sourceName = val('f_source');
@@ -194,64 +230,146 @@ export async function savePurchase() {
 export function openEditPurchaseModal(id) {
   const p = DB.purchases.find(x => x.id === id);
   if (!p) return;
+  purchaseItems = p.items.map(i => ({
+    product_id: i.product_id,
+    name: i.name,
+    qty: i.qty,
+    cost: i.cost
+  }));
+  const brandOpts = DB.brands.map(b => `<option value="${b.id}" ${b.id === p.brand_id ? 'selected' : ''}>${b.name}</option>`).join('');
+  const sup = DB.suppliers.find(s => s.id === p.supplier_id);
+  const supName = sup ? sup.name : '';
+
   openModal(`
     <h3>ক্রয় এডিট করুন</h3><div class="stitch"></div>
-    <div class="helper" style="margin-bottom:12px;">প্রোডাক্ট আইটেম এডিট করতে এন্ট্রিটি ডিলিট করে নতুন করে যোগ করুন।</div>
     <div class="row2">
-      <div class="field"><label>তারিখ</label><input id="ep_date" type="date" value="${p.date}"></div>
-      <div class="field"><label>মেমো নম্বর</label><input id="ep_memo" value="${p.memo_no || ''}"></div>
+      <div class="field"><label>ব্র্যান্ড</label><select id="f_pubrand" onchange="renderPurchaseRows()">
+        <option value="">-- বাছাই করুন --</option>${brandOpts}<option value="__newbrand__">➕ নতুন ব্র্যান্ড</option></select>
+      </div>
+      <div class="field" id="newBrandField" style="display:none;"><label>নতুন ব্র্যান্ডের নাম</label><input id="f_newbrand"></div>
+      <div class="field"><label>সোর্স/কার কাছ থেকে কিনলেন</label><input id="f_source" list="supList" value="${supName}" placeholder="দোকান বা ব্যক্তির নাম">
+        <datalist id="supList">${DB.suppliers.map(s => `<option value="${s.name}">`).join('')}</datalist>
+      </div>
+    </div>
+    <div id="pItemRows"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addPurchaseRow()">+ আরও প্রোডাক্ট</button>
+    <div class="row2" style="margin-top:12px;">
+      <div class="field"><label>তারিখ</label><input id="f_pdate" type="date" value="${p.date}"></div>
+      <div class="field"><label>মেমো নম্বর (ঐচ্ছিক)</label><input id="f_pmemo" value="${p.memo_no || ''}" placeholder="যেমন: M-101"></div>
     </div>
     <div class="row2">
-      <div class="field"><label>পেইড হয়েছে</label><input id="ep_paid" type="number" value="${p.paid}" oninput="updateEditPurchaseDue('${id}')"></div>
-      <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="ep_method" onchange="onPaymentMethodChange('ep_')">  ${paymentMethodOptions(p.payment_method)}</select></div>
+      <div class="field"><label>পেইড হয়েছে</label><input id="f_ppaid" type="number" value="${p.paid}" oninput="updatePurchaseTotals()"></div>
+      <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_pmethod" onchange="onPaymentMethodChange('f_p')">${paymentMethodOptions(p.payment_method)}</select></div>
     </div>
-    <div class="field" id="ep_AccountWrap"></div>
+    <div class="field" id="f_pAccountWrap"></div>
     <div class="totals-box">
-      <div class="r"><span>সর্বমোট</span><b class="num">${taka(p.total)}</b></div>
-      <div class="r"><span>বাকি থাকবে</span><b id="ep_due" class="num" style="color:var(--gold-600)">${taka(Math.max(0, p.total - p.paid))}</b></div>
+      <div class="r"><span>সর্বমোট</span><b id="pTotal" class="num">৳০</b></div>
+      <div class="r"><span>সাপ্লায়ারকে বাকি থাকবে</span><b id="pDue" class="num" style="color:var(--gold-600)">৳০</b></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">বাতিল</button>
-      <button class="btn btn-primary" onclick="saveEditPurchase('${id}')">আপডেট করুন</button>
+      <button class="btn btn-primary" onclick="saveEditPurchase('${p.id}')">আপডেট করুন</button>
     </div>`);
-  // pre-fill payment account if needed
-  const { renderPaymentAccountField } = window._payAccHelper || {};
+
+  document.getElementById('f_pubrand').addEventListener('change', function () {
+    document.getElementById('newBrandField').style.display = this.value === '__newbrand__' ? 'block' : 'none';
+  });
   if (p.payment_method !== 'cash') {
-    import('./payment-accounts.js').then(m => m.renderPaymentAccountField('ep_', p.payment_method, p.payment_account_id));
+    import('./payment-accounts.js').then(m => m.renderPaymentAccountField('f_p', p.payment_method, p.payment_account_id));
   }
+  renderPurchaseRows();
 }
 export function updateEditPurchaseDue(id) {
-  const p = DB.purchases.find(x => x.id === id);
-  if (!p) return;
-  const paid = Number(document.getElementById('ep_paid')?.value || 0);
-  const due = document.getElementById('ep_due');
-  if (due) due.textContent = taka(Math.max(0, p.total - paid));
+  updatePurchaseTotals();
 }
 export async function saveEditPurchase(id) {
-  const p = DB.purchases.find(x => x.id === id);
-  if (!p) return;
-  const newPaid = Number(val('ep_paid') || 0);
-  const newDue  = Math.max(0, p.total - newPaid);
+  const oldP = DB.purchases.find(x => x.id === id);
+  if (!oldP) return;
+
+  syncPurchaseRowsFromDOM();
+  let brandId = val('f_pubrand');
+  if (!brandId) { alert('ব্র্যান্ড বাছাই করুন'); return; }
+  const sourceName = val('f_source');
+  if (!sourceName) { alert('সোর্স/সাপ্লায়ারের নাম দিন'); return; }
+  const validItems = purchaseItems.filter(i => i.product_id && i.qty > 0);
+  if (!validItems.length) { alert('অন্তত একটা প্রোডাক্ট বাছাই করুন'); return; }
+
   setLoading(true);
   try {
-    const paymentSel = await resolvePaymentSelection('ep_');
+    const paymentSel = await resolvePaymentSelection('f_p');
     if (!paymentSel) return;
-    const { error } = await sb.from('purchases').update({
-      date: val('ep_date') || p.date,
-      memo_no: val('ep_memo').trim(),
-      paid: newPaid,
-      due: newDue,
+
+    // 1. Revert old product stock
+    for (const oldIt of oldP.items) {
+      const prod = DB.products.find(x => x.id === oldIt.product_id);
+      const revertedQty = Math.max(0, (prod ? prod.qty : 0) - oldIt.qty);
+      await sb.from('products').update({ qty: revertedQty }).eq('id', oldIt.product_id);
+    }
+
+    // 2. Revert old supplier due
+    const oldSup = DB.suppliers.find(x => x.id === oldP.supplier_id);
+    if (oldSup) {
+      const revertedDue = Math.max(0, oldSup.due - oldP.due);
+      await sb.from('suppliers').update({ due: revertedDue }).eq('id', oldSup.id);
+    }
+
+    // 3. Resolve new brand if added
+    if (brandId === '__newbrand__') {
+      const bname = val('f_newbrand');
+      if (!bname) { alert('নতুন ব্র্যান্ডের নাম দিন'); return; }
+      const { data, error } = await sb.from('brands').insert({ name: bname }).select().single();
+      if (error) { alert('ব্র্যান্ড তৈরি ব্যর্থ: ' + error.message); return; }
+      DB.brands.push(data); brandId = data.id;
+    }
+
+    // 4. Resolve product items
+    const resolvedItems = [];
+    for (const it of validItems) {
+      if (it.product_id === '__new__') {
+        if (!it.new_name) { alert('নতুন প্রোডাক্টের নাম দিন'); return; }
+        const { data, error } = await sb.from('products').insert({ brand_id: brandId, name: it.new_name, category: it.new_meta || '', buy_price: it.cost, qty: 0 }).select().single();
+        if (error) { alert('প্রোডাক্ট তৈরি ব্যর্থ: ' + error.message); return; }
+        resolvedItems.push({ product_id: data.id, name: data.name, qty: it.qty, cost: it.cost });
+      } else {
+        resolvedItems.push({ product_id: it.product_id, name: it.name, qty: it.qty, cost: it.cost });
+      }
+    }
+
+    const total = resolvedItems.reduce((s, i) => s + i.qty * i.cost, 0);
+    const paid = Number(val('f_ppaid') || 0);
+    const due = Math.max(0, total - paid);
+    const supplier = await ensureSupplier(sourceName);
+    const memoNo = val('f_pmemo').trim();
+
+    // 5. Update purchase main row
+    const { error: perr } = await sb.from('purchases').update({
+      date: val('f_pdate') || oldP.date,
+      memo_no: memoNo,
+      brand_id: brandId,
+      supplier_id: supplier.id,
+      total,
+      paid,
+      due,
       payment_method: paymentSel.payment_method,
       payment_account_id: paymentSel.payment_account_id
     }).eq('id', id);
-    if (error) { alert('আপডেট ব্যর্থ: ' + error.message); return; }
-    // supplier due adjust: old due সরাও, নতুন due যোগ করো
-    const s = DB.suppliers.find(x => x.id === p.supplier_id);
-    if (s) {
-      const adjustedDue = Math.max(0, s.due - p.due + newDue);
-      await sb.from('suppliers').update({ due: adjustedDue }).eq('id', s.id);
+    if (perr) { alert('ক্রয় আপডেট ব্যর্থ: ' + perr.message); return; }
+
+    // 6. Replace purchase items
+    await sb.from('purchase_items').delete().eq('purchase_id', id);
+    const itemRows = resolvedItems.map(i => ({ purchase_id: id, product_id: i.product_id, name: i.name, qty: i.qty, cost: i.cost }));
+    await sb.from('purchase_items').insert(itemRows);
+
+    // 7. Apply new stock and new supplier due
+    for (const it of resolvedItems) {
+      const p = DB.products.find(x => x.id === it.product_id);
+      const newQty = (p ? p.qty : 0) + it.qty;
+      await sb.from('products').update({ qty: newQty, buy_price: it.cost }).eq('id', it.product_id);
     }
-    closeModal(); await loadAll(); renderPurchases();
+    const currentSup = DB.suppliers.find(x => x.id === supplier.id) || supplier;
+    await sb.from('suppliers').update({ due: currentSup.due + due }).eq('id', supplier.id);
+
+    closeModal(); await loadAll(); renderPurchases(); renderCatalog();
   } finally { setLoading(false); }
 }
 export async function deletePurchase(id) {
@@ -288,3 +406,4 @@ window.openEditPurchaseModal = openEditPurchaseModal;
 window.updateEditPurchaseDue = updateEditPurchaseDue;
 window.saveEditPurchase = saveEditPurchase;
 window.deletePurchase = deletePurchase;
+
