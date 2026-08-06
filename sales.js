@@ -4,6 +4,7 @@ import { taka, val, todayISO, dateBn, emptyState, setLoading, paymentMethodOptio
 import { openModal, closeModal } from './modal.js';
 import { renderCatalog } from './catalog.js';
 import { resolvePaymentSelection, paymentMethodDisplay } from './payment-accounts.js';
+import { printSaleReceipt } from './receipt.js';
 
 /* ============================================================ SALES */
 let salesFilter = 'all';
@@ -45,6 +46,7 @@ export function renderSales() {
             <td><span class="tag ${s.payment_method}">${paymentMethodDisplay(s.payment_method, s.payment_account_id)}</span></td>
             <td class="num">${s.due > 0 ? `<span class="tag due">${taka(s.due)}</span>` : `<span class="tag paid">নেই</span>`}</td>
             <td><div class="row-actions">
+              <button class="btn btn-gold btn-sm" onclick="printSaleReceipt('${s.id}')">🖨️ রিসিট</button>
               <button class="btn btn-ghost btn-sm" onclick="openEditSaleModal('${s.id}')">এডিট</button>
               <button class="btn btn-danger-ghost btn-sm" onclick="deleteSale('${s.id}')">ডিলিট</button>
             </div></td>
@@ -361,3 +363,5 @@ window.saveEditSale = saveEditSale;
 window.deleteSale = deleteSale;
 window.onSaleQtyInput = onSaleQtyInput;
 window.onSalePriceInput = onSalePriceInput;
+window.printSaleReceipt = printSaleReceipt;
+
