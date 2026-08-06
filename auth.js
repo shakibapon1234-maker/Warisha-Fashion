@@ -1,7 +1,8 @@
 import { sb } from './supabaseClient.js';
 import { loadAll } from './state.js';
-import { val } from './utils.js';
+import { val, pwField } from './utils.js';
 import { buildTabs, showTab } from './tabs.js';
+import { openModal, closeModal } from './modal.js';
 
 /* ---------------- Auth ---------------- */
 export async function handleLogin() {
