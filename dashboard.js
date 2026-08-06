@@ -3,6 +3,11 @@ import { taka, dateBn, todayISO, emptyState } from './utils.js';
 import { runSyncGuardAudit } from './backup-sync.js';
 
 /* ============================================================ DASHBOARD */
+/* payment_method অনুযায়ী একটা array থেকে amount filter করার helper */
+function sumByMethod(arr, method, amtKey = 'amount') {
+  return arr.filter(x => x.payment_method === method).reduce((s, x) => s + (x[amtKey] || 0), 0);
+}
+
 export function computeTotals() {
   const salesPaid = DB.sales.reduce((s, x) => s + x.paid, 0);
   const custDuePayments = DB.payments_customer.reduce((s, x) => s + x.amount, 0);
@@ -20,7 +25,19 @@ export function computeTotals() {
   const custAdvBalance = DB.customers.reduce((s, c) => s + c.advance, 0);
   const supAdvBalance = DB.suppliers.reduce((s, x) => s + x.advance, 0);
   const stockValue = DB.products.reduce((s, p) => s + p.qty * p.buy_price, 0);
-  return { totalIn, totalOut, cash: totalIn - totalOut, custDue, supDue, stockValue, investTotal, custAdvBalance, supAdvBalance };
+
+  // প্রতিটি মাধ্যম অনুযায়ী মোট ঢুকেছে (IN)
+  const allIn = [...DB.sales.map(x=>({...x,amount:x.paid})), ...DB.payments_customer, ...DB.investments, ...DB.advances_customer];
+  // প্রতিটি মাধ্যম অনুযায়ী মোট বেরিয়েছে (OUT)
+  const allOut = [...DB.purchases.map(x=>({...x,amount:x.paid})), ...DB.expenses, ...DB.advances_supplier, ...DB.payments_supplier];
+
+  const cashBalance   = sumByMethod(allIn,'cash')   - sumByMethod(allOut,'cash');
+  const bankBalance   = sumByMethod(allIn,'bank')   - sumByMethod(allOut,'bank');
+  const mobileBalance = sumByMethod(allIn,'mobile_banking') - sumByMethod(allOut,'mobile_banking');
+  const totalBalance  = cashBalance + bankBalance + mobileBalance;
+
+  return { totalIn, totalOut, cash: totalIn - totalOut, custDue, supDue, stockValue, investTotal, custAdvBalance, supAdvBalance,
+           cashBalance, bankBalance, mobileBalance, totalBalance };
 }
 
 export function renderDashboard() {
@@ -28,7 +45,10 @@ export function renderDashboard() {
   document.getElementById('todayLabel').textContent = dateBn(todayISO());
   document.getElementById('dashIn').textContent = taka(t.totalIn);
   document.getElementById('dashOut').textContent = taka(t.totalOut);
-  document.getElementById('dashCash').textContent = taka(t.cash);
+  document.getElementById('dashCash').textContent = taka(t.totalBalance);
+  document.getElementById('dashCashCash').textContent = taka(t.cashBalance);
+  document.getElementById('dashCashBank').textContent = taka(t.bankBalance);
+  document.getElementById('dashCashMobile').textContent = taka(t.mobileBalance);
   document.getElementById('dashCustDue').textContent = taka(t.custDue);
   document.getElementById('dashSupDue').textContent = taka(t.supDue);
   document.getElementById('dashStock').textContent = taka(t.stockValue);

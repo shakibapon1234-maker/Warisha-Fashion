@@ -109,6 +109,15 @@ tbody tr:last-child td{border-bottom:none;} tbody tr:hover{background:#FAF8F0;}
 .tag.bank{background:var(--blue-bg); color:var(--blue);}
 .tag.mobile_banking{background:var(--plum-bg); color:var(--plum);}
 .row-actions{display:flex; gap:6px; justify-content:flex-start;}
+/* ড্যাশবোর্ড ক্যাশ ব্যালেন্স breakdown */
+.cash-breakdown{margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,.18); display:flex; flex-direction:column; gap:5px;}
+.cb-row{display:flex; align-items:center; gap:6px; font-size:12px;}
+.cb-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+.cb-cash{background:#6FCB92;}
+.cb-bank{background:#7FB2D6;}
+.cb-mobile{background:#B074A3;}
+.cb-label{flex:1; color:rgba(255,255,255,.75); font-size:11.5px;}
+.cb-val{color:#fff; font-weight:700; font-size:12.5px; font-family:'Baloo Da 2';}
 .empty-state{padding:30px 20px; text-align:center; color:var(--muted); font-size:13.5px;}
 .empty-state b{display:block; color:var(--teal-900); font-size:15px; margin-bottom:4px; font-family:'Baloo Da 2';}
 .overlay{position:fixed; inset:0; background:rgba(20,25,20,.45); display:none; align-items:flex-start; justify-content:center; padding:30px 14px; overflow-y:auto; z-index:100;}
