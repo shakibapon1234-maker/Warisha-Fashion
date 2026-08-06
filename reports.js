@@ -54,8 +54,16 @@ export function renderReport() {
   const custAdv = DB.advances_customer.filter(a => inRange(a.date));
   const supAdv = DB.advances_supplier.filter(a => inRange(a.date));
 
-  const totalIn = sales.reduce((s, x) => s + x.paid, 0) + custPay.reduce((s, x) => s + x.amount, 0) + invest.reduce((s, x) => s + x.amount, 0) + custAdv.reduce((s, x) => s + x.amount, 0);
-  const totalOut = purchases.reduce((s, x) => s + x.paid, 0) + expenses.reduce((s, x) => s + x.amount, 0) + supPay.reduce((s, x) => s + x.amount, 0) + supAdv.reduce((s, x) => s + x.amount, 0);
+  const totalIn = sales.reduce((s, x) => s + x.paid, 0)
+    + custPay.reduce((s, x) => s + x.amount, 0)
+    + invest.reduce((s, x) => s + x.amount, 0)
+    + custAdv.reduce((s, x) => s + x.amount, 0)
+    + purchases.reduce((s, x) => s + (x.discount || 0), 0); // ক্রয় ছাড় = ক্যাশ ইন
+  const totalOut = purchases.reduce((s, x) => s + x.paid, 0)
+    + expenses.reduce((s, x) => s + x.amount, 0)
+    + supPay.reduce((s, x) => s + x.amount, 0)
+    + supAdv.reduce((s, x) => s + x.amount, 0)
+    + sales.reduce((s, x) => s + (x.discount || 0), 0); // বিক্রয় ছাড় = ক্যাশ আউট
   const net = totalIn - totalOut;
 
   cachedReportSummary = {
@@ -77,10 +85,14 @@ export function renderReport() {
     ...custPay.map(x => ({ date: x.date, type: 'বকেয়া আদায়', desc: customerName(x.customer_id), amt: x.amount, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
     ...invest.map(x => ({ date: x.date, type: 'ইনভেস্টমেন্ট', desc: x.person, amt: x.amount, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
     ...custAdv.map(x => ({ date: x.date, type: 'গ্রাহক অগ্রিম', desc: customerName(x.customer_id), amt: x.amount, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
+    // ক্রয়ে পাওয়া ছাড় → ক্যাশ ইন
+    ...purchases.filter(x => (x.discount||0) > 0).map(x => ({ date: x.date, type: 'ক্রয় ছাড় (সাপ্লায়ার দিয়েছে)', desc: supplierName(x.supplier_id), amt: x.discount, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
     ...purchases.map(x => ({ date: x.date, type: `ক্রয় (${brandName(x.brand_id)})`, desc: supplierName(x.supplier_id), amt: x.paid, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
     ...expenses.map(x => ({ date: x.date, type: 'খরচ', desc: x.category, amt: x.amount, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
     ...supPay.map(x => ({ date: x.date, type: 'সাপ্লায়ার দেনা পরিশোধ', desc: supplierName(x.supplier_id), amt: x.amount, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
     ...supAdv.map(x => ({ date: x.date, type: 'সাপ্লায়ার অগ্রিম', desc: supplierName(x.supplier_id), amt: x.amount, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
+    // বিক্রয়ে দেওয়া ছাড় → ক্যাশ আউট
+    ...sales.filter(x => (x.discount||0) > 0).map(x => ({ date: x.date, type: 'বিক্রয় ছাড় (কাস্টমারকে দেওয়া)', desc: customerName(x.customer_id), amt: x.discount, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
   ].sort((a, b) => b.date.localeCompare(a.date));
 
   cachedReportRows = rows;

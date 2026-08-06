@@ -211,8 +211,8 @@ export async function savePurchase() {
 
     const total = resolvedItems.reduce((s, i) => s + i.qty * i.cost, 0);
     const discount = Number(val('f_pdiscount') || 0);
-    const paid = Number(val('f_ppaid') || 0);
     const afterDiscount = Math.max(0, total - discount);
+    const paid = Math.min(Number(val('f_ppaid') || 0), afterDiscount); // ছাড়ের চেয়ে বেশি পেমেন্ট হতে পারবে না
     const due = Math.max(0, afterDiscount - paid);
     const supplier = await ensureSupplier(sourceName);
     const memoNo = val('f_pmemo').trim();
@@ -348,8 +348,8 @@ export async function saveEditPurchase(id) {
 
     const total = resolvedItems.reduce((s, i) => s + i.qty * i.cost, 0);
     const discount = Number(val('f_pdiscount') || 0);
-    const paid = Number(val('f_ppaid') || 0);
     const afterDiscount = Math.max(0, total - discount);
+    const paid = Math.min(Number(val('f_ppaid') || 0), afterDiscount); // ছাড়ের চেয়ে বেশি পেমেন্ট হতে পারবে না
     const due = Math.max(0, afterDiscount - paid);
     const supplier = await ensureSupplier(sourceName);
     const memoNo = val('f_pmemo').trim();

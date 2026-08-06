@@ -13,23 +13,39 @@ export function computeTotals() {
   const custDuePayments = DB.payments_customer.reduce((s, x) => s + x.amount, 0);
   const investTotal = DB.investments.reduce((s, x) => s + x.amount, 0);
   const custAdvReceived = DB.advances_customer.reduce((s, x) => s + x.amount, 0);
+  const purchaseDiscount = DB.purchases.reduce((s, x) => s + (x.discount || 0), 0); // সাপ্লায়ার দিয়েছে ছাড় = ক্যাশে থাকা সাশ্রয়
+  const saleDiscount = DB.sales.reduce((s, x) => s + (x.discount || 0), 0); // বিক্রয়ে দেওয়া ছাড় = কাস্টমারকে দেওয়া (out)
   const purchasePaid = DB.purchases.reduce((s, x) => s + x.paid, 0);
   const expenseTotal = DB.expenses.reduce((s, x) => s + x.amount, 0);
   const supAdvGiven = DB.advances_supplier.reduce((s, x) => s + x.amount, 0);
   const supDuePayments = DB.payments_supplier.reduce((s, x) => s + x.amount, 0);
 
-  const totalIn = salesPaid + custDuePayments + investTotal + custAdvReceived;
-  const totalOut = purchasePaid + expenseTotal + supAdvGiven + supDuePayments;
+  const totalIn = salesPaid + custDuePayments + investTotal + custAdvReceived + purchaseDiscount;
+  const totalOut = purchasePaid + expenseTotal + supAdvGiven + supDuePayments + saleDiscount;
   const custDue = DB.customers.reduce((s, c) => s + c.due, 0);
   const supDue = DB.suppliers.reduce((s, x) => s + x.due, 0);
   const custAdvBalance = DB.customers.reduce((s, c) => s + c.advance, 0);
   const supAdvBalance = DB.suppliers.reduce((s, x) => s + x.advance, 0);
   const stockValue = DB.products.reduce((s, p) => s + p.qty * p.buy_price, 0);
 
-  // প্রতিটি মাধ্যম অনুযায়ী মোট ঢুকেছে (IN)
-  const allIn = [...DB.sales.map(x=>({...x,amount:x.paid})), ...DB.payments_customer, ...DB.investments, ...DB.advances_customer];
-  // প্রতিটি মাধ্যম অনুযায়ী মোট বেরিয়েছে (OUT)
-  const allOut = [...DB.purchases.map(x=>({...x,amount:x.paid})), ...DB.expenses, ...DB.advances_supplier, ...DB.payments_supplier];
+  // প্রতিটি মাধ্যম অনুযায়ী মোট ঢুকেছে (IN) — purchase discount same method দিয়ে cash-in
+  const allIn = [
+    ...DB.sales.map(x=>({...x,amount:x.paid})),
+    ...DB.payments_customer,
+    ...DB.investments,
+    ...DB.advances_customer,
+    // ক্রয়ে পাওয়া ছাড় → সেই পেমেন্ট মাধ্যমেই ক্যাশে থাকে
+    ...DB.purchases.filter(x => (x.discount||0) > 0).map(x=>({...x, amount: x.discount})),
+  ];
+  // প্রতিটি মাধ্যম অনুযায়ী মোট বেরিয়েছে (OUT) — sale discount same method দিয়ে cash-out
+  const allOut = [
+    ...DB.purchases.map(x=>({...x,amount:x.paid})),
+    ...DB.expenses,
+    ...DB.advances_supplier,
+    ...DB.payments_supplier,
+    // বিক্রয়ে দেওয়া ছাড় → সেই পেমেন্ট মাধ্যম থেকে বেরিয়েছে
+    ...DB.sales.filter(x => (x.discount||0) > 0).map(x=>({...x, amount: x.discount})),
+  ];
 
   const cashBalance   = sumByMethod(allIn,'cash')   - sumByMethod(allOut,'cash');
   const bankBalance   = sumByMethod(allIn,'bank')   - sumByMethod(allOut,'bank');
