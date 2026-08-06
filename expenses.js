@@ -13,7 +13,10 @@ export function renderExpenses() {
     <tbody>${rows.map(e => `<tr><td>${dateBn(e.date)}</td><td>${e.category}</td><td>${e.note || '-'}</td>
       <td class="num">${taka(e.amount)}</td>
       <td><span class="tag ${e.payment_method}">${paymentMethodDisplay(e.payment_method, e.payment_account_id)}</span></td>
-      <td><button class="btn btn-danger-ghost btn-sm" onclick="deleteExpense('${e.id}')">ডিলিট</button></td></tr>`).join('')}</tbody></table>`;
+      <td><div class="row-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openEditExpenseModal('${e.id}')">এডিট</button>
+        <button class="btn btn-danger-ghost btn-sm" onclick="deleteExpense('${e.id}')">ডিলিট</button>
+      </div></td></tr>`).join('')}</tbody></table>`;
 }
 export function openExpenseModal() {
   openModal(`
@@ -26,6 +29,45 @@ export function openExpenseModal() {
     <div class="field"><label>নোট (ঐচ্ছিক)</label><textarea id="f_enote" rows="2"></textarea></div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">বাতিল</button>
     <button class="btn btn-primary" onclick="saveExpense()">সেভ করুন</button></div>`);
+}
+export function openEditExpenseModal(id) {
+  const e = DB.expenses.find(x => x.id === id);
+  if (!e) return;
+  openModal(`
+    <h3>খরচ এডিট করুন</h3><div class="stitch"></div>
+    <div class="field"><label>খাত</label><input id="ee_cat" value="${e.category}"></div>
+    <div class="row2">
+      <div class="field"><label>টাকা</label><input id="ee_amt" type="number" value="${e.amount}"></div>
+      <div class="field"><label>তারিখ</label><input id="ee_date" type="date" value="${e.date}"></div>
+    </div>
+    <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="ee_method" onchange="onPaymentMethodChange('ee_')">${paymentMethodOptions(e.payment_method)}</select></div>
+    <div class="field" id="ee_AccountWrap"></div>
+    <div class="field"><label>নোট (এচ্ছিক)</label><textarea id="ee_note" rows="2">${e.note || ''}</textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">বাতিল</button>
+      <button class="btn btn-primary" onclick="saveEditExpense('${id}')">আপডেট করুন</button>
+    </div>`);
+  if (e.payment_method !== 'cash') {
+    import('./payment-accounts.js').then(m => m.renderPaymentAccountField('ee_', e.payment_method, e.payment_account_id));
+  }
+}
+export async function saveEditExpense(id) {
+  const category = val('ee_cat'), amount = Number(val('ee_amt') || 0);
+  if (!category || amount <= 0) { alert('খাত ও সঠিক টাকার পরিমাণ দিন'); return; }
+  setLoading(true);
+  try {
+    const paymentSel = await resolvePaymentSelection('ee_');
+    if (!paymentSel) return;
+    const { error } = await sb.from('expenses').update({
+      category, amount,
+      note: val('ee_note'),
+      date: val('ee_date') || todayISO(),
+      payment_method: paymentSel.payment_method,
+      payment_account_id: paymentSel.payment_account_id
+    }).eq('id', id);
+    if (error) { alert('আপডেট ব্যর্থ: ' + error.message); return; }
+    closeModal(); await loadAll(); renderExpenses();
+  } finally { setLoading(false); }
 }
 export async function saveExpense() {
   const category = val('f_ecat'), amount = Number(val('f_eamt') || 0);
@@ -53,4 +95,6 @@ export async function deleteExpense(id) {
 
 window.openExpenseModal = openExpenseModal;
 window.saveExpense = saveExpense;
+window.openEditExpenseModal = openEditExpenseModal;
+window.saveEditExpense = saveEditExpense;
 window.deleteExpense = deleteExpense;

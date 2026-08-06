@@ -42,7 +42,10 @@ export function renderSales() {
             <td class="num">${taka(s.total)}</td><td class="num">${taka(s.paid)}</td>
             <td><span class="tag ${s.payment_method}">${paymentMethodDisplay(s.payment_method, s.payment_account_id)}</span></td>
             <td class="num">${s.due > 0 ? `<span class="tag due">${taka(s.due)}</span>` : `<span class="tag paid">নেই</span>`}</td>
-            <td><button class="btn btn-danger-ghost btn-sm" onclick="deleteSale('${s.id}')">ডিলিট</button></td>
+            <td><div class="row-actions">
+              <button class="btn btn-ghost btn-sm" onclick="openEditSaleModal('${s.id}')">এডিট</button>
+              <button class="btn btn-danger-ghost btn-sm" onclick="deleteSale('${s.id}')">ডিলিট</button>
+            </div></td>
           </tr>`).join('')}
       </tbody>
     </table>`;
@@ -97,8 +100,8 @@ export function renderSaleRows() {
         <div class="field" style="margin:0;"><label>প্রোডাক্ট</label>
           <select onchange="onSaleProductChange(${idx}, this.value)"><option value="">-- বাছাই করুন --</option>${productOptions(it.product_id)}</select>
         </div>
-        <div class="field" style="margin:0;"><label>Quantity</label><input type="number" min="1" value="${it.qty}" oninput="onSaleQtyChange(${idx}, this.value)"></div>
-        <div class="field" style="margin:0;"><label>দাম/পিস</label><input type="number" value="${it.price}" oninput="onSalePriceChange(${idx}, this.value)"></div>
+        <div class="field" style="margin:0;"><label>Quantity</label><input type="number" min="1" value="${it.qty}" oninput="onSaleQtyInput(${idx}, this.value)" onchange="onSaleQtyChange(${idx}, this.value)"></div>
+        <div class="field" style="margin:0;"><label>দাম/পিস</label><input type="number" value="${it.price}" oninput="onSalePriceInput(${idx}, this.value)" onchange="onSalePriceChange(${idx}, this.value)"></div>
         ${saleItems.length > 1 ? `<button class="remove-row" onclick="removeSaleRow(${idx})">✕</button>` : '<span></span>'}
       </div>
       <div class="line-total">লাইন টোটাল: ${taka(it.qty * it.price)}</div>
@@ -106,7 +109,11 @@ export function renderSaleRows() {
   updateSaleTotals();
 }
 export function onSaleProductChange(idx, pid) { const p = DB.products.find(x => x.id === pid); saleItems[idx].product_id = pid; saleItems[idx].name = p ? p.name : ''; renderSaleRows(); }
-export function onSaleQtyChange(idx, v) { saleItems[idx].qty = Number(v || 1); renderSaleRows(); }
+// oninput: শুধু total আপডেট, DOM re-render না — typing স্বাভাবিক থাকে
+export function onSaleQtyInput(idx, v)   { saleItems[idx].qty   = Number(v || 1); updateSaleTotals(); }
+export function onSalePriceInput(idx, v) { saleItems[idx].price = Number(v || 0); updateSaleTotals(); }
+// onchange: blur/Enter-এ row re-render করে line-total ঠিক দেখায়
+export function onSaleQtyChange(idx, v)   { saleItems[idx].qty   = Number(v || 1); renderSaleRows(); }
 export function onSalePriceChange(idx, v) { saleItems[idx].price = Number(v || 0); renderSaleRows(); }
 export function addSaleRow() { saleItems.push({ product_id: '', qty: 1, price: 0 }); renderSaleRows(); }
 export function removeSaleRow(idx) { saleItems.splice(idx, 1); renderSaleRows(); }
@@ -151,6 +158,67 @@ export async function saveSale() {
     closeModal(); await loadAll(); renderSales(); renderCatalog();
   } finally { setLoading(false); }
 }
+export function openEditSaleModal(id) {
+  const s = DB.sales.find(x => x.id === id);
+  if (!s) return;
+  openModal(`
+    <h3>বিক্রয় এডিট করুন</h3><div class="stitch"></div>
+    <div class="helper" style="margin-bottom:12px;">প্রোডাক্ট আইটেম এডিট করতে এন্ট্রিটি ডিলিট করে নতুন করে যোগ করুন।</div>
+    <div class="row2">
+      <div class="field"><label>তারিখ</label><input id="es_date" type="date" value="${s.date}"></div>
+      <div class="field"><label>মেমো নম্বর</label><input id="es_memo" value="${s.memo_no || ''}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>পেইড হয়েছে</label><input id="es_paid" type="number" value="${s.paid}" oninput="updateEditSaleDue('${id}')"></div>
+      <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="es_method" onchange="onPaymentMethodChange('es_')">${paymentMethodOptions(s.payment_method)}</select></div>
+    </div>
+    <div class="field" id="es_AccountWrap"></div>
+    <div class="totals-box">
+      <div class="r"><span>সর্বমোট</span><b class="num">${taka(s.total)}</b></div>
+      <div class="r"><span>বাকি থাকবে</span><b id="es_due" class="num" style="color:var(--gold-600)">${taka(Math.max(0, s.total - s.paid))}</b></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">বাতিল</button>
+      <button class="btn btn-primary" onclick="saveEditSale('${id}')">আপডেট করুন</button>
+    </div>`);
+  if (s.payment_method !== 'cash') {
+    import('./payment-accounts.js').then(m => m.renderPaymentAccountField('es_', s.payment_method, s.payment_account_id));
+  }
+}
+export function updateEditSaleDue(id) {
+  const s = DB.sales.find(x => x.id === id);
+  if (!s) return;
+  const paid = Number(document.getElementById('es_paid')?.value || 0);
+  const due = document.getElementById('es_due');
+  if (due) due.textContent = taka(Math.max(0, s.total - paid));
+}
+export async function saveEditSale(id) {
+  const s = DB.sales.find(x => x.id === id);
+  if (!s) return;
+  const newPaid = Number(val('es_paid') || 0);
+  const newDue  = Math.max(0, s.total - newPaid);
+  setLoading(true);
+  try {
+    const paymentSel = await resolvePaymentSelection('es_');
+    if (!paymentSel) return;
+    const { error } = await sb.from('sales').update({
+      date: val('es_date') || s.date,
+      memo_no: val('es_memo').trim(),
+      paid: newPaid,
+      due: newDue,
+      payment_method: paymentSel.payment_method,
+      payment_account_id: paymentSel.payment_account_id
+    }).eq('id', id);
+    if (error) { alert('আপডেট ব্যর্থ: ' + error.message); return; }
+    // customer due adjust
+    const c = DB.customers.find(x => x.id === s.customer_id);
+    if (c) {
+      const adjustedDue = Math.max(0, c.due - s.due + newDue);
+      await sb.from('customers').update({ due: adjustedDue }).eq('id', c.id);
+    }
+    closeModal(); await loadAll(); renderSales();
+  } finally { setLoading(false); }
+}
 export async function deleteSale(id) {
   if (!confirm('এই বিক্রয়টি ডিলিট করবেন? স্টক ও বকেয়া আগের অবস্থায় ফিরে যাবে।')) return;
   const s = DB.sales.find(x => x.id === id);
@@ -178,4 +246,9 @@ window.addSaleRow = addSaleRow;
 window.removeSaleRow = removeSaleRow;
 window.updateSaleTotals = updateSaleTotals;
 window.saveSale = saveSale;
+window.openEditSaleModal = openEditSaleModal;
+window.updateEditSaleDue = updateEditSaleDue;
+window.saveEditSale = saveEditSale;
 window.deleteSale = deleteSale;
+window.onSaleQtyInput = onSaleQtyInput;
+window.onSalePriceInput = onSalePriceInput;

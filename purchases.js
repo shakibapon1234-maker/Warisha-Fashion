@@ -35,7 +35,10 @@ export function renderPurchases() {
             <td class="num">${taka(p.total)}</td><td class="num">${taka(p.paid)}</td>
             <td><span class="tag ${p.payment_method}">${paymentMethodDisplay(p.payment_method, p.payment_account_id)}</span></td>
             <td class="num">${p.due > 0 ? `<span class="tag due">${taka(p.due)}</span>` : `<span class="tag paid">নেই</span>`}</td>
-            <td><button class="btn btn-danger-ghost btn-sm" onclick="deletePurchase('${p.id}')">ডিলিট</button></td>
+            <td><div class="row-actions">
+              <button class="btn btn-ghost btn-sm" onclick="openEditPurchaseModal('${p.id}')">এডিট</button>
+              <button class="btn btn-danger-ghost btn-sm" onclick="deletePurchase('${p.id}')">ডিলিট</button>
+            </div></td>
           </tr>`).join('')}
       </tbody>
     </table>`;
@@ -188,6 +191,69 @@ export async function savePurchase() {
     closeModal(); await loadAll(); renderPurchases(); renderCatalog();
   } finally { setLoading(false); }
 }
+export function openEditPurchaseModal(id) {
+  const p = DB.purchases.find(x => x.id === id);
+  if (!p) return;
+  openModal(`
+    <h3>ক্রয় এডিট করুন</h3><div class="stitch"></div>
+    <div class="helper" style="margin-bottom:12px;">প্রোডাক্ট আইটেম এডিট করতে এন্ট্রিটি ডিলিট করে নতুন করে যোগ করুন।</div>
+    <div class="row2">
+      <div class="field"><label>তারিখ</label><input id="ep_date" type="date" value="${p.date}"></div>
+      <div class="field"><label>মেমো নম্বর</label><input id="ep_memo" value="${p.memo_no || ''}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>পেইড হয়েছে</label><input id="ep_paid" type="number" value="${p.paid}" oninput="updateEditPurchaseDue('${id}')"></div>
+      <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="ep_method" onchange="onPaymentMethodChange('ep_')">  ${paymentMethodOptions(p.payment_method)}</select></div>
+    </div>
+    <div class="field" id="ep_AccountWrap"></div>
+    <div class="totals-box">
+      <div class="r"><span>সর্বমোট</span><b class="num">${taka(p.total)}</b></div>
+      <div class="r"><span>বাকি থাকবে</span><b id="ep_due" class="num" style="color:var(--gold-600)">${taka(Math.max(0, p.total - p.paid))}</b></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">বাতিল</button>
+      <button class="btn btn-primary" onclick="saveEditPurchase('${id}')">আপডেট করুন</button>
+    </div>`);
+  // pre-fill payment account if needed
+  const { renderPaymentAccountField } = window._payAccHelper || {};
+  if (p.payment_method !== 'cash') {
+    import('./payment-accounts.js').then(m => m.renderPaymentAccountField('ep_', p.payment_method, p.payment_account_id));
+  }
+}
+export function updateEditPurchaseDue(id) {
+  const p = DB.purchases.find(x => x.id === id);
+  if (!p) return;
+  const paid = Number(document.getElementById('ep_paid')?.value || 0);
+  const due = document.getElementById('ep_due');
+  if (due) due.textContent = taka(Math.max(0, p.total - paid));
+}
+export async function saveEditPurchase(id) {
+  const p = DB.purchases.find(x => x.id === id);
+  if (!p) return;
+  const newPaid = Number(val('ep_paid') || 0);
+  const newDue  = Math.max(0, p.total - newPaid);
+  setLoading(true);
+  try {
+    const paymentSel = await resolvePaymentSelection('ep_');
+    if (!paymentSel) return;
+    const { error } = await sb.from('purchases').update({
+      date: val('ep_date') || p.date,
+      memo_no: val('ep_memo').trim(),
+      paid: newPaid,
+      due: newDue,
+      payment_method: paymentSel.payment_method,
+      payment_account_id: paymentSel.payment_account_id
+    }).eq('id', id);
+    if (error) { alert('আপডেট ব্যর্থ: ' + error.message); return; }
+    // supplier due adjust: old due সরাও, নতুন due যোগ করো
+    const s = DB.suppliers.find(x => x.id === p.supplier_id);
+    if (s) {
+      const adjustedDue = Math.max(0, s.due - p.due + newDue);
+      await sb.from('suppliers').update({ due: adjustedDue }).eq('id', s.id);
+    }
+    closeModal(); await loadAll(); renderPurchases();
+  } finally { setLoading(false); }
+}
 export async function deletePurchase(id) {
   if (!confirm('এই ক্রয়টি ডিলিট করবেন? স্টক ও সাপ্লায়ারের বকেয়া আগের অবস্থায় ফিরে যাবে।')) return;
   const p = DB.purchases.find(x => x.id === id);
@@ -218,4 +284,7 @@ window.addPurchaseRow = addPurchaseRow;
 window.removePurchaseRow = removePurchaseRow;
 window.updatePurchaseTotals = updatePurchaseTotals;
 window.savePurchase = savePurchase;
+window.openEditPurchaseModal = openEditPurchaseModal;
+window.updateEditPurchaseDue = updateEditPurchaseDue;
+window.saveEditPurchase = saveEditPurchase;
 window.deletePurchase = deletePurchase;

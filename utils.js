@@ -1,8 +1,13 @@
 /* ============================================================ ছোট হেল্পার ফাংশন */
 export function todayISO(offsetDays = 0) {
+  // toISOString() is UTC — UTC-7 এ রাত ৩টা মানে UTC তে পরেরদিন সকাল ১০টা,
+  // তাই local date parts থেকে manually তৈরি করা হচ্ছে
   const d = new Date();
-  d.setDate(d.getDate() + offsetDays);
-  return d.toISOString().slice(0, 10);
+  if (offsetDays) d.setDate(d.getDate() + offsetDays);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
 }
 export function taka(n) {
   return "৳" + Number(n || 0).toLocaleString('en-US');
