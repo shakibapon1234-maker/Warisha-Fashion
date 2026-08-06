@@ -24,7 +24,7 @@ export function renderPurchases() {
   if (!rows.length) { wrap.innerHTML = emptyState('কোনো ক্রয় পাওয়া যায়নি', 'অনুগ্রহ করে অনুসন্ধানের শব্দ মিলিয়ে দেখুন'); return; }
   wrap.innerHTML = `
     <table>
-      <thead><tr><th>তারিখ</th><th>মেমো নম্বর</th><th>ব্র্যান্ড</th><th>সোর্স</th><th>প্রোডাক্ট</th><th>মোট</th><th>পেইড</th><th>মাধ্যম</th><th>বাকি</th><th></th></tr></thead>
+      <thead><tr><th>তারিখ</th><th>মেমো নম্বর</th><th>ব্র্যান্ড</th><th>সোর্স</th><th>প্রোডাক্ট</th><th>মোট</th><th>ছাড়</th><th>পেইড</th><th>মাধ্যম</th><th>বাকি</th><th></th></tr></thead>
       <tbody>
         ${rows.map(p => `
           <tr>
@@ -32,7 +32,9 @@ export function renderPurchases() {
             <td>${p.memo_no ? `<strong>${p.memo_no}</strong>` : '<span class="helper">-</span>'}</td>
             <td>${brandName(p.brand_id)}</td><td>${supplierName(p.supplier_id)}</td>
             <td>${p.items.map(i => `${i.name} × ${i.qty}`).join(', ')}</td>
-            <td class="num">${taka(p.total)}</td><td class="num">${taka(p.paid)}</td>
+            <td class="num">${taka(p.total)}</td>
+            <td class="num">${p.discount > 0 ? `<span class="tag" style="background:rgba(16,185,129,0.15);color:#10b981">${taka(p.discount)}</span>` : '<span class="helper">-</span>'}</td>
+            <td class="num">${taka(p.paid)}</td>
             <td><span class="tag ${p.payment_method}">${paymentMethodDisplay(p.payment_method, p.payment_account_id)}</span></td>
             <td class="num">${p.due > 0 ? `<span class="tag due">${taka(p.due)}</span>` : `<span class="tag paid">নেই</span>`}</td>
             <td><div class="row-actions">
@@ -65,12 +67,14 @@ export function openPurchaseModal() {
       <div class="field"><label>মেমো নম্বর (ঐচ্ছিক)</label><input id="f_pmemo" placeholder="যেমন: M-101"></div>
     </div>
     <div class="row2">
+      <div class="field"><label>ছাড় (টাকা)</label><input id="f_pdiscount" type="number" value="0" oninput="updatePurchaseTotals()"></div>
       <div class="field"><label>পেইড হয়েছে</label><input id="f_ppaid" type="number" value="0" oninput="updatePurchaseTotals()"></div>
-      <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_pmethod" onchange="onPaymentMethodChange('f_p')">${paymentMethodOptions('cash')}</select></div>
     </div>
+    <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_pmethod" onchange="onPaymentMethodChange('f_p')">${paymentMethodOptions('cash')}</select></div>
     <div class="field" id="f_pAccountWrap"></div>
     <div class="totals-box">
       <div class="r"><span>সর্বমোট</span><b id="pTotal" class="num">৳০</b></div>
+      <div class="r"><span>ছাড়ের পরে</span><b id="pAfterDiscount" class="num">৳০</b></div>
       <div class="r"><span>সাপ্লায়ারকে বাকি থাকবে</span><b id="pDue" class="num" style="color:var(--gold-600)">৳০</b></div>
     </div>
     <div class="modal-actions">
@@ -164,9 +168,12 @@ export function removePurchaseRow(idx) {
 }
 export function updatePurchaseTotals() {
   const total = purchaseItems.reduce((s, i) => s + i.qty * i.cost, 0);
+  const discount = Number(val('f_pdiscount') || 0);
   const paid = Number(val('f_ppaid') || 0);
-  document.getElementById('pTotal').textContent = taka(total);
-  document.getElementById('pDue').textContent = taka(Math.max(0, total - paid));
+  const afterDiscount = Math.max(0, total - discount);
+  if (document.getElementById('pTotal')) document.getElementById('pTotal').textContent = taka(total);
+  if (document.getElementById('pAfterDiscount')) document.getElementById('pAfterDiscount').textContent = taka(afterDiscount);
+  if (document.getElementById('pDue')) document.getElementById('pDue').textContent = taka(Math.max(0, afterDiscount - paid));
 }
 export async function savePurchase() {
   syncPurchaseRowsFromDOM();
@@ -203,13 +210,15 @@ export async function savePurchase() {
     }
 
     const total = resolvedItems.reduce((s, i) => s + i.qty * i.cost, 0);
+    const discount = Number(val('f_pdiscount') || 0);
     const paid = Number(val('f_ppaid') || 0);
-    const due = Math.max(0, total - paid);
+    const afterDiscount = Math.max(0, total - discount);
+    const due = Math.max(0, afterDiscount - paid);
     const supplier = await ensureSupplier(sourceName);
     const memoNo = val('f_pmemo').trim();
 
     const { data: purchaseRow, error: perr } = await sb.from('purchases').insert({
-      date: val('f_pdate') || todayISO(), memo_no: memoNo, brand_id: brandId, supplier_id: supplier.id, total, paid, due,
+      date: val('f_pdate') || todayISO(), memo_no: memoNo, brand_id: brandId, supplier_id: supplier.id, total, discount, paid, due,
       payment_method: paymentSel.payment_method, payment_account_id: paymentSel.payment_account_id
     }).select().single();
     if (perr) { alert('ক্রয় সেভ ব্যর্থ: ' + perr.message); return; }
@@ -258,12 +267,14 @@ export function openEditPurchaseModal(id) {
       <div class="field"><label>মেমো নম্বর (ঐচ্ছিক)</label><input id="f_pmemo" value="${p.memo_no || ''}" placeholder="যেমন: M-101"></div>
     </div>
     <div class="row2">
+      <div class="field"><label>ছাড় (টাকা)</label><input id="f_pdiscount" type="number" value="${p.discount || 0}" oninput="updatePurchaseTotals()"></div>
       <div class="field"><label>পেইড হয়েছে</label><input id="f_ppaid" type="number" value="${p.paid}" oninput="updatePurchaseTotals()"></div>
-      <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_pmethod" onchange="onPaymentMethodChange('f_p')">${paymentMethodOptions(p.payment_method)}</select></div>
     </div>
+    <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_pmethod" onchange="onPaymentMethodChange('f_p')">${paymentMethodOptions(p.payment_method)}</select></div>
     <div class="field" id="f_pAccountWrap"></div>
     <div class="totals-box">
       <div class="r"><span>সর্বমোট</span><b id="pTotal" class="num">৳০</b></div>
+      <div class="r"><span>ছাড়ের পরে</span><b id="pAfterDiscount" class="num">৳০</b></div>
       <div class="r"><span>সাপ্লায়ারকে বাকি থাকবে</span><b id="pDue" class="num" style="color:var(--gold-600)">৳০</b></div>
     </div>
     <div class="modal-actions">
@@ -336,8 +347,10 @@ export async function saveEditPurchase(id) {
     }
 
     const total = resolvedItems.reduce((s, i) => s + i.qty * i.cost, 0);
+    const discount = Number(val('f_pdiscount') || 0);
     const paid = Number(val('f_ppaid') || 0);
-    const due = Math.max(0, total - paid);
+    const afterDiscount = Math.max(0, total - discount);
+    const due = Math.max(0, afterDiscount - paid);
     const supplier = await ensureSupplier(sourceName);
     const memoNo = val('f_pmemo').trim();
 
@@ -348,6 +361,7 @@ export async function saveEditPurchase(id) {
       brand_id: brandId,
       supplier_id: supplier.id,
       total,
+      discount,
       paid,
       due,
       payment_method: paymentSel.payment_method,

@@ -57,11 +57,11 @@ export async function loadAll() {
     DB.suppliers = (suppliersR.data || []).map(s => ({ ...s, due: Number(s.due), advance: Number(s.advance) }));
     DB.customers = (customersR.data || []).map(c => ({ ...c, due: Number(c.due), advance: Number(c.advance) }));
     DB.purchases = (purchasesR.data || []).map(p => ({
-      ...p, memo_no: p.memo_no || '', total: Number(p.total), paid: Number(p.paid), due: Number(p.due), payment_method: p.payment_method || 'cash',
+      ...p, memo_no: p.memo_no || '', total: Number(p.total), discount: Number(p.discount || 0), paid: Number(p.paid), due: Number(p.due), payment_method: p.payment_method || 'cash',
       items: (p.purchase_items || []).map(i => ({ product_id: i.product_id, name: i.name, qty: Number(i.qty), cost: Number(i.cost) }))
     }));
     DB.sales = (salesR.data || []).map(s => ({
-      ...s, memo_no: s.memo_no || '', total: Number(s.total), paid: Number(s.paid), due: Number(s.due), payment_method: s.payment_method || 'cash',
+      ...s, memo_no: s.memo_no || '', total: Number(s.total), discount: Number(s.discount || 0), paid: Number(s.paid), due: Number(s.due), payment_method: s.payment_method || 'cash',
       items: (s.sale_items || []).map(i => ({ product_id: i.product_id, name: i.name, qty: Number(i.qty), price: Number(i.price) }))
     }));
     DB.payments_customer = (pcR.data || []).map(x => ({ ...x, amount: Number(x.amount), payment_method: x.payment_method || 'cash', payment_account_id: x.payment_account_id || null }));

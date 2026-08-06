@@ -30,7 +30,7 @@ export function renderSales() {
   if (!rows.length) { wrap.innerHTML = emptyState('কোনো বিক্রয় নেই', 'ফিল্টার বা অনুসন্ধানের শব্দ পাল্টে দেখুন'); return; }
   wrap.innerHTML = `
     <table>
-      <thead><tr><th>তারিখ</th><th>মেমো নম্বর</th><th>ধরন</th><th>কাস্টমার</th><th>প্রোডাক্ট</th><th>মোট</th><th>পেইড</th><th>মাধ্যম</th><th>বাকি</th><th></th></tr></thead>
+      <thead><tr><th>তারিখ</th><th>মেমো নম্বর</th><th>ধরন</th><th>কাস্টমার</th><th>প্রোডাক্ট</th><th>মোট</th><th>ছাড়</th><th>পেইড</th><th>মাধ্যম</th><th>বাকি</th><th></th></tr></thead>
       <tbody>
         ${rows.map(s => `
           <tr>
@@ -39,7 +39,9 @@ export function renderSales() {
             <td><span class="tag ${s.sale_type}">${s.sale_type === 'wholesale' ? 'পাইকারি' : 'খুচরা'}</span></td>
             <td>${customerName(s.customer_id)}</td>
             <td>${s.items.map(i => `${i.name} × ${i.qty}`).join(', ')}</td>
-            <td class="num">${taka(s.total)}</td><td class="num">${taka(s.paid)}</td>
+            <td class="num">${taka(s.total)}</td>
+            <td class="num">${s.discount > 0 ? `<span class="tag" style="background:rgba(16,185,129,0.15);color:#10b981">${taka(s.discount)}</span>` : '<span class="helper">-</span>'}</td>
+            <td class="num">${taka(s.paid)}</td>
             <td><span class="tag ${s.payment_method}">${paymentMethodDisplay(s.payment_method, s.payment_account_id)}</span></td>
             <td class="num">${s.due > 0 ? `<span class="tag due">${taka(s.due)}</span>` : `<span class="tag paid">নেই</span>`}</td>
             <td><div class="row-actions">
@@ -71,12 +73,14 @@ export function openSaleModal() {
       <div class="field"><label>মেমো নম্বর (ঐচ্ছিক)</label><input id="f_smemo" placeholder="যেমন: S-101"></div>
     </div>
     <div class="row2">
+      <div class="field"><label>ছাড় (টাকা)</label><input id="f_sdiscount" type="number" value="0" oninput="updateSaleTotals()"></div>
       <div class="field"><label>পেইড হয়েছে</label><input id="f_paid" type="number" value="0" oninput="updateSaleTotals()"></div>
-      <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_smethod" onchange="onPaymentMethodChange('f_s')">${paymentMethodOptions('cash')}</select></div>
     </div>
+    <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_smethod" onchange="onPaymentMethodChange('f_s')">${paymentMethodOptions('cash')}</select></div>
     <div class="field" id="f_sAccountWrap"></div>
     <div class="totals-box">
       <div class="r"><span>সর্বমোট</span><b id="sTotal" class="num">৳০</b></div>
+      <div class="r"><span>ছাড়ের পরে</span><b id="sAfterDiscount" class="num">৳০</b></div>
       <div class="r"><span>বাকি থাকবে</span><b id="sDue" class="num" style="color:var(--gold-600)">৳০</b></div>
     </div>
     <div class="modal-actions">
@@ -157,9 +161,12 @@ export function removeSaleRow(idx) {
 }
 export function updateSaleTotals() {
   const total = saleItems.reduce((s, i) => s + i.qty * i.price, 0);
+  const discount = Number(val('f_sdiscount') || 0);
   const paid = Number(val('f_paid') || 0);
-  document.getElementById('sTotal').textContent = taka(total);
-  document.getElementById('sDue').textContent = taka(Math.max(0, total - paid));
+  const afterDiscount = Math.max(0, total - discount);
+  if (document.getElementById('sTotal')) document.getElementById('sTotal').textContent = taka(total);
+  if (document.getElementById('sAfterDiscount')) document.getElementById('sAfterDiscount').textContent = taka(afterDiscount);
+  if (document.getElementById('sDue')) document.getElementById('sDue').textContent = taka(Math.max(0, afterDiscount - paid));
 }
 export async function saveSale() {
   syncSaleRowsFromDOM();
@@ -168,8 +175,10 @@ export async function saveSale() {
   const validItems = saleItems.filter(i => i.product_id && i.qty > 0);
   if (!validItems.length) { alert('অন্তত একটা প্রোডাক্ট বাছাই করুন'); return; }
   const total = validItems.reduce((s, i) => s + i.qty * i.price, 0);
+  const discount = Number(val('f_sdiscount') || 0);
   const paid = Number(val('f_paid') || 0);
-  const due = Math.max(0, total - paid);
+  const afterDiscount = Math.max(0, total - discount);
+  const due = Math.max(0, afterDiscount - paid);
 
   setLoading(true);
   try {
@@ -179,7 +188,7 @@ export async function saveSale() {
     const customer = await ensureCustomer(cname, val('f_cphone'));
     const memoNo = val('f_smemo').trim();
     const { data: saleRow, error: serr } = await sb.from('sales').insert({
-      date: val('f_sdate') || todayISO(), memo_no: memoNo, sale_type: currentSaleType, customer_id: customer.id, total, paid, due,
+      date: val('f_sdate') || todayISO(), memo_no: memoNo, sale_type: currentSaleType, customer_id: customer.id, total, discount, paid, due,
       payment_method: paymentSel.payment_method, payment_account_id: paymentSel.payment_account_id
     }).select().single();
     if (serr) { alert('বিক্রয় সেভ ব্যর্থ: ' + serr.message); return; }
@@ -230,12 +239,14 @@ export function openEditSaleModal(id) {
       <div class="field"><label>মেমো নম্বর (ঐচ্ছিক)</label><input id="f_smemo" value="${s.memo_no || ''}" placeholder="যেমন: S-101"></div>
     </div>
     <div class="row2">
+      <div class="field"><label>ছাড় (টাকা)</label><input id="f_sdiscount" type="number" value="${s.discount || 0}" oninput="updateSaleTotals()"></div>
       <div class="field"><label>পেইড হয়েছে</label><input id="f_paid" type="number" value="${s.paid}" oninput="updateSaleTotals()"></div>
-      <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_smethod" onchange="onPaymentMethodChange('f_s')">${paymentMethodOptions(s.payment_method)}</select></div>
     </div>
+    <div class="field"><label>পেমেন্ট মাধ্যম <span style="color:var(--danger)">*</span></label><select id="f_smethod" onchange="onPaymentMethodChange('f_s')">${paymentMethodOptions(s.payment_method)}</select></div>
     <div class="field" id="f_sAccountWrap"></div>
     <div class="totals-box">
       <div class="r"><span>সর্বমোট</span><b id="sTotal" class="num">৳০</b></div>
+      <div class="r"><span>ছাড়ের পরে</span><b id="sAfterDiscount" class="num">৳০</b></div>
       <div class="r"><span>বাকি থাকবে</span><b id="sDue" class="num" style="color:var(--gold-600)">৳০</b></div>
     </div>
     <div class="modal-actions">
@@ -262,8 +273,10 @@ export async function saveEditSale(id) {
   const validItems = saleItems.filter(i => i.product_id && i.qty > 0);
   if (!validItems.length) { alert('অন্তত একটা প্রোডাক্ট বাছাই করুন'); return; }
   const total = validItems.reduce((s, i) => s + i.qty * i.price, 0);
+  const discount = Number(val('f_sdiscount') || 0);
   const paid = Number(val('f_paid') || 0);
-  const due = Math.max(0, total - paid);
+  const afterDiscount = Math.max(0, total - discount);
+  const due = Math.max(0, afterDiscount - paid);
 
   setLoading(true);
   try {
@@ -291,6 +304,7 @@ export async function saveEditSale(id) {
       sale_type: currentSaleType,
       customer_id: customer.id,
       total,
+      discount,
       paid,
       due,
       payment_method: paymentSel.payment_method,
