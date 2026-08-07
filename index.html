@@ -222,7 +222,7 @@
         <div class="field"><label>তারিখ শেষ</label><input type="date" id="repTo" onchange="renderReport()"></div>
       </div>
       <div class="field" style="margin-top:8px;">
-        <label style="margin-bottom:6px;">কুইক তারাক সিলেক্টর</label>
+        <label style="margin-bottom:6px;">কুইক তারিখ সিলেক্টর</label>
         <div class="row-actions" style="flex-wrap:wrap;gap:6px;">
           <button class="btn btn-ghost btn-sm" onclick="setQuickDate('today')">আজ</button>
           <button class="btn btn-ghost btn-sm" onclick="setQuickDate('yesterday')">গতকাল</button>
@@ -230,6 +230,23 @@
           <button class="btn btn-ghost btn-sm" onclick="setQuickDate('this_month')">এই মাস</button>
           <button class="btn btn-ghost btn-sm" onclick="setQuickDate('all')">সব লেনদেন</button>
         </div>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label style="margin-bottom:6px;">লেনদেনের ধরন ফিল্টার</label>
+        <div class="row-actions" style="flex-wrap:wrap;gap:6px;" id="repTypeFilters">
+          <button class="btn btn-sm rep-type-btn rep-type-active" data-type="all" onclick="setReportTypeFilter('all')">🔁 সব</button>
+          <button class="btn btn-sm rep-type-btn" data-type="sales" onclick="setReportTypeFilter('sales')">📈 বিক্রয়</button>
+          <button class="btn btn-sm rep-type-btn" data-type="purchases" onclick="setReportTypeFilter('purchases')">📦 ক্রয়</button>
+          <button class="btn btn-sm rep-type-btn" data-type="investment" onclick="setReportTypeFilter('investment')">💰 ইনভেস্টমেন্ট</button>
+          <button class="btn btn-sm rep-type-btn" data-type="advance" onclick="setReportTypeFilter('advance')">⏩ অগ্রিম</button>
+          <button class="btn btn-sm rep-type-btn" data-type="expense" onclick="setReportTypeFilter('expense')">🧾 খরচ</button>
+          <button class="btn btn-sm rep-type-btn" data-type="due" onclick="setReportTypeFilter('due')">💳 বকেয়া আদায়</button>
+          <button class="btn btn-sm rep-type-btn" data-type="discount" onclick="setReportTypeFilter('discount')">🏷️ ছাড় (Discount)</button>
+        </div>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label style="margin-bottom:6px;">🔍 খোঁজ করুন (নাম / বিবরণ / ধরন)</label>
+        <input type="text" id="repSearch" placeholder="যেমন: Masud Rana, Legacy, ক্রয়..." oninput="renderReport()" style="width:100%;max-width:420px;">
       </div>
     </div>
     <div class="grid-cards" id="reportCards"></div>

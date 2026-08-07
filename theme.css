@@ -93,6 +93,12 @@ header.top{
   background:linear-gradient(135deg, var(--teal-800), var(--plum)) !important;
   color:#FFF !important;
 }
+.rep-type-btn.rep-type-active{
+  background:linear-gradient(135deg, var(--teal-800), var(--plum)) !important;
+  color:#FFF !important;
+  border-color:var(--teal-500) !important;
+  box-shadow:0 4px 12px rgba(91,33,182,.4);
+}
 
 /* ---------- কার্ড: প্রতিটা ক্যাটাগরির নিজস্ব রঙে টিন্টেড গ্লাস কার্ড (ছবি ১ এর স্টাইল) ---------- */
 .card{

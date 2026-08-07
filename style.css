@@ -57,6 +57,7 @@ section.active{display:block; animation:fadeIn .25s ease;}
 .btn-ghost{background:transparent; color:var(--teal-800); border:1.5px solid var(--border);} .btn-ghost:hover{border-color:var(--teal-700);}
 .btn-danger-ghost{background:transparent; color:var(--danger); border:1.5px solid #EBD3D0;}
 .btn-sm{padding:5px 10px; font-size:12.5px; border-radius:8px;}
+.rep-type-btn.rep-type-active{background:var(--teal-800); color:#FCF8ED; border-color:var(--teal-700);}
 .seg{display:inline-flex; background:#F0ECE0; border-radius:10px; padding:3px; gap:2px;}
 .seg button{
   border:none; background:transparent; padding:7px 16px; border-radius:8px; cursor:pointer;

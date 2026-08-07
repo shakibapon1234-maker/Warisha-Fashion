@@ -5,6 +5,18 @@ import { downloadCSV, printSection } from './export.js';
 
 /* ============================================================ REPORTS & EXPORT */
 
+/* Active type filter */
+let activeTypeFilter = 'all';
+
+export function setReportTypeFilter(type) {
+  activeTypeFilter = type;
+  // Update active button styles
+  document.querySelectorAll('.rep-type-btn').forEach(btn => {
+    btn.classList.toggle('rep-type-active', btn.dataset.type === type);
+  });
+  renderReport();
+}
+
 export function setQuickDate(preset) {
   const fromEl = document.getElementById('repFrom');
   const toEl = document.getElementById('repTo');
@@ -44,6 +56,7 @@ export function renderReport() {
   const from = val('repFrom') || '0000-00-00';
   const to = val('repTo') || '9999-99-99';
   const inRange = d => d >= from && d <= to;
+  const searchQ = (document.getElementById('repSearch')?.value || '').trim().toLowerCase();
 
   const sales = DB.sales.filter(s => inRange(s.date));
   const purchases = DB.purchases.filter(p => inRange(p.date));
@@ -54,16 +67,23 @@ export function renderReport() {
   const custAdv = DB.advances_customer.filter(a => inRange(a.date));
   const supAdv = DB.advances_supplier.filter(a => inRange(a.date));
 
-  const totalIn = sales.reduce((s, x) => s + x.paid, 0)
-    + custPay.reduce((s, x) => s + x.amount, 0)
-    + invest.reduce((s, x) => s + x.amount, 0)
-    + custAdv.reduce((s, x) => s + x.amount, 0)
-    + purchases.reduce((s, x) => s + (x.discount || 0), 0); // ক্রয় ছাড় = ক্যাশ ইন
-  const totalOut = purchases.reduce((s, x) => s + x.paid, 0)
-    + expenses.reduce((s, x) => s + x.amount, 0)
-    + supPay.reduce((s, x) => s + x.amount, 0)
-    + supAdv.reduce((s, x) => s + x.amount, 0)
-    + sales.reduce((s, x) => s + (x.discount || 0), 0); // বিক্রয় ছাড় = ক্যাশ আউট
+  /* --- Build all rows first --- */
+  let allRows = [
+    ...sales.map(x => ({ date: x.date, category: 'sales', type: `বিক্রয় (${x.sale_type === 'wholesale' ? 'পাইকারি' : 'খুচরা'})`, desc: customerName(x.customer_id), amt: x.paid, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
+    ...custPay.map(x => ({ date: x.date, category: 'due', type: 'বকেয়া আদায়', desc: customerName(x.customer_id), amt: x.amount, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
+    ...invest.map(x => ({ date: x.date, category: 'investment', type: 'ইনভেস্টমেন্ট', desc: x.person, amt: x.amount, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
+    ...custAdv.map(x => ({ date: x.date, category: 'advance', type: 'গ্রাহক অগ্রিম', desc: customerName(x.customer_id), amt: x.amount, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
+    ...purchases.filter(x => (x.discount||0) > 0).map(x => ({ date: x.date, category: 'discount', isDiscount: true, type: 'ক্রয় ছাড় (সাপ্লায়ার দিয়েছে)', desc: supplierName(x.supplier_id), amt: x.discount, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
+    ...purchases.map(x => ({ date: x.date, category: 'purchases', type: `ক্রয় (${brandName(x.brand_id)})`, desc: supplierName(x.supplier_id), amt: x.paid, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
+    ...expenses.map(x => ({ date: x.date, category: 'expense', type: 'খরচ', desc: x.category, amt: x.amount, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
+    ...supPay.map(x => ({ date: x.date, category: 'due', type: 'সাপ্লায়ার দেনা পরিশোধ', desc: supplierName(x.supplier_id), amt: x.amount, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
+    ...supAdv.map(x => ({ date: x.date, category: 'advance', type: 'সাপ্লায়ার অগ্রিম', desc: supplierName(x.supplier_id), amt: x.amount, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
+    ...sales.filter(x => (x.discount||0) > 0).map(x => ({ date: x.date, category: 'discount', isDiscount: true, type: 'বিক্রয় ছাড় (কাস্টমারকে দেওয়া)', desc: customerName(x.customer_id), amt: x.discount, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
+  ].sort((a, b) => b.date.localeCompare(a.date));
+
+  /* --- Summary from full date-filtered rows (before type/search filter) --- */
+  const totalIn  = allRows.filter(r => r.dir === 'in').reduce((s, r) => s + r.amt, 0);
+  const totalOut = allRows.filter(r => r.dir === 'out').reduce((s, r) => s + r.amt, 0);
   const net = totalIn - totalOut;
 
   cachedReportSummary = {
@@ -72,30 +92,51 @@ export function renderReport() {
     toStr: val('repTo') ? dateBn(val('repTo')) : 'আজ পর্যন্ত'
   };
 
-  const cardsWrap = document.getElementById('reportCards');
-  if (cardsWrap) {
-    cardsWrap.innerHTML = `
-      <div class="card in"><div class="label">মোট ঢুকেছে (ক্যাশ ইন)</div><div class="value num">${taka(totalIn)}</div></div>
-      <div class="card out"><div class="label">মোট বেরিয়েছে (ক্যাশ আউট)</div><div class="value num">${taka(totalOut)}</div></div>
-      <div class="card cash"><div class="label">নিট কায়িক জমা (ক্যাশ ব্যালেন্স)</div><div class="value num" style="color:${net >= 0 ? 'var(--gold-300)' : 'var(--danger)'};">${taka(net)}</div></div>`;
+  /* --- Apply type filter --- */
+  let rows = activeTypeFilter === 'all'
+    ? allRows
+    : allRows.filter(r => r.category === activeTypeFilter || (activeTypeFilter === 'discount' && r.isDiscount));
+
+  /* --- Apply keyword search --- */
+  if (searchQ) {
+    rows = rows.filter(r =>
+      r.type.toLowerCase().includes(searchQ) ||
+      r.desc.toLowerCase().includes(searchQ) ||
+      r.method.toLowerCase().includes(searchQ)
+    );
   }
 
-  const rows = [
-    ...sales.map(x => ({ date: x.date, type: `বিক্রয় (${x.sale_type === 'wholesale' ? 'পাইকারি' : 'খুচরা'})`, desc: customerName(x.customer_id), amt: x.paid, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
-    ...custPay.map(x => ({ date: x.date, type: 'বকেয়া আদায়', desc: customerName(x.customer_id), amt: x.amount, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
-    ...invest.map(x => ({ date: x.date, type: 'ইনভেস্টমেন্ট', desc: x.person, amt: x.amount, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
-    ...custAdv.map(x => ({ date: x.date, type: 'গ্রাহক অগ্রিম', desc: customerName(x.customer_id), amt: x.amount, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
-    // ক্রয়ে পাওয়া ছাড় → ক্যাশ ইন
-    ...purchases.filter(x => (x.discount||0) > 0).map(x => ({ date: x.date, type: 'ক্রয় ছাড় (সাপ্লায়ার দিয়েছে)', desc: supplierName(x.supplier_id), amt: x.discount, dir: 'in', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
-    ...purchases.map(x => ({ date: x.date, type: `ক্রয় (${brandName(x.brand_id)})`, desc: supplierName(x.supplier_id), amt: x.paid, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
-    ...expenses.map(x => ({ date: x.date, type: 'খরচ', desc: x.category, amt: x.amount, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
-    ...supPay.map(x => ({ date: x.date, type: 'সাপ্লায়ার দেনা পরিশোধ', desc: supplierName(x.supplier_id), amt: x.amount, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
-    ...supAdv.map(x => ({ date: x.date, type: 'সাপ্লায়ার অগ্রিম', desc: supplierName(x.supplier_id), amt: x.amount, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
-    // বিক্রয়ে দেওয়া ছাড় → ক্যাশ আউট
-    ...sales.filter(x => (x.discount||0) > 0).map(x => ({ date: x.date, type: 'বিক্রয় ছাড় (কাস্টমারকে দেওয়া)', desc: customerName(x.customer_id), amt: x.discount, dir: 'out', method: paymentMethodDisplay(x.payment_method, x.payment_account_id) })),
-  ].sort((a, b) => b.date.localeCompare(a.date));
-
   cachedReportRows = rows;
+
+  /* --- Filtered summary for active filter --- */
+  const filtIn  = rows.filter(r => r.dir === 'in').reduce((s, r) => s + r.amt, 0);
+  const filtOut = rows.filter(r => r.dir === 'out').reduce((s, r) => s + r.amt, 0);
+  const filtNet = filtIn - filtOut;
+
+  const filterLabel = {
+    all: 'সব লেনদেন', sales: 'বিক্রয়', purchases: 'ক্রয়',
+    investment: 'ইনভেস্টমেন্ট', advance: 'অগ্রিম', expense: 'খরচ', due: 'বকেয়া', discount: 'ছাড় (Discount)'
+  }[activeTypeFilter] || 'সব';
+
+  const cardsWrap = document.getElementById('reportCards');
+  if (cardsWrap) {
+    if (activeTypeFilter === 'all' && !searchQ) {
+      cardsWrap.innerHTML = `
+        <div class="card in"><div class="label">মোট ঢুকেছে (ক্যাশ ইন)</div><div class="value num">${taka(totalIn)}</div></div>
+        <div class="card out"><div class="label">মোট বেরিয়েছে (ক্যাশ আউট)</div><div class="value num">${taka(totalOut)}</div></div>
+        <div class="card cash"><div class="label">নিট ক্যাশ ব্যালেন্স</div><div class="value num" style="color:${net >= 0 ? 'var(--gold-300)' : 'var(--danger)'};">${taka(net)}</div></div>`;
+    } else {
+      /* Show filtered totals */
+      const inCard  = filtIn  > 0 ? `<div class="card in"><div class="label">${filterLabel} — মোট ইন</div><div class="value num">${taka(filtIn)}</div></div>` : '';
+      const outCard = filtOut > 0 ? `<div class="card out"><div class="label">${filterLabel} — মোট আউট</div><div class="value num">${taka(filtOut)}</div></div>` : '';
+      const netCard = (filtIn > 0 && filtOut > 0)
+        ? `<div class="card cash"><div class="label">নিট (${filterLabel})</div><div class="value num" style="color:${filtNet >= 0 ? 'var(--gold-300)' : 'var(--danger)'};">${taka(filtNet)}</div></div>` : '';
+      const totalCard = filtIn === 0 || filtOut === 0
+        ? `<div class="card ${filtIn > 0 ? 'in' : 'out'}"><div class="label">${filterLabel} — মোট</div><div class="value num">${taka(filtIn + filtOut)}</div></div>` : '';
+      cardsWrap.innerHTML = inCard + outCard + netCard + totalCard ||
+        `<div class="card cash"><div class="label">${filterLabel}</div><div class="value num">৳০</div></div>`;
+    }
+  }
 
   const wrap = document.getElementById('reportTable');
   if (wrap) {
@@ -106,16 +147,16 @@ export function renderReport() {
         <td><span class="tag ${r.dir === 'in' ? 'cash' : 'bank'}">${r.method}</span></td>
         <td class="num" style="color:${r.dir === 'in' ? 'var(--success)' : 'var(--danger)'};font-weight:700;">${r.dir === 'in' ? '+' : '-'}${taka(r.amt)}</td>
       </tr>`).join('')}</tbody></table>`
-      : emptyState('কোনো লেনদেন পাওয়া যায়নি', 'তারিখের রেঞ্জ পরিবর্তন করে দেখুন');
+      : emptyState('কোনো লেনদেন পাওয়া যায়নি', 'ফিল্টার বা তারিখের রেঞ্জ পরিবর্তন করে দেখুন');
   }
 }
 
 export function exportReportPDF() {
-  if (!cachedReportRows.length) { alert('প্রিন্ট করার জন্য কোনো লেনদেন পাওয়া যায়নি'); return; }
+  if (!cachedReportRows.length) { alert('প্রিন্ট করার জন্য কোনো লেনদেন পাওয়া যায়নি'); return; }
   const rangeStr = `${cachedReportSummary.fromStr} হতে ${cachedReportSummary.toStr}`;
   const cardsHtml = `
     <div class="card"><div class="lbl">মোট ঢুকেছে (ক্যাশ ইন)</div><div class="val">${taka(cachedReportSummary.totalIn)}</div></div>
-    <div class="card"><div class="lbl">মোট বেরিয়েছিল (ক্যাশ আউট)</div><div class="val">${taka(cachedReportSummary.totalOut)}</div></div>
+    <div class="card"><div class="lbl">মোট বেরিয়েছিল (ক্যাশ আউট)</div><div class="val">${taka(cachedReportSummary.totalOut)}</div></div>
     <div class="card"><div class="lbl">নিট ব্যালেন্স</div><div class="val">${taka(cachedReportSummary.net)}</div></div>`;
   const headerHtml = `<tr><th>তারিখ</th><th>ধরন</th><th>বিবরণ</th><th>পেমেন্ট মাধ্যম</th><th class="num">পরিমাণ</th></tr>`;
   const bodyHtml = cachedReportRows.map(r => `
@@ -128,7 +169,7 @@ export function exportReportPDF() {
 }
 
 export function exportReportExcel() {
-  if (!cachedReportRows.length) { alert('ডাউনলোড করার জন্য কোনো লেনদেন পাওয়া যায়নি'); return; }
+  if (!cachedReportRows.length) { alert('ডাউনলোড করার জন্য কোনো লেনদেন পাওয়া যায়নি'); return; }
   const headers = ['তারিখ', 'ধরন', 'বিবরণ', 'পেমেন্ট মাধ্যম', 'লেনদেনের দিক', 'পরিমাণ (টাকা)'];
   const rows = cachedReportRows.map(r => [
     r.date, r.type, r.desc, r.method, r.dir === 'in' ? 'ইন (+)' : 'আউট (-)', r.amt
@@ -138,8 +179,8 @@ export function exportReportExcel() {
 
 /* Module Specific Exports */
 export function exportPurchasesExcel() {
-  if (!DB.purchases.length) { alert('ডাউনলোড করার জন্য কোনো ক্রয় পাওয়া যায়নি'); return; }
-  const headers = ['তারিখ', 'মেমো নম্বর', 'ব্র্যান্ড', 'সাপ্লায়ার/সোর্স', 'প্রোডাক্টসমূহ', 'মোট টাকা', 'পেইড টাকা', 'বাকি টাকা', 'পেমেন্ট মাধ্যম'];
+  if (!DB.purchases.length) { alert('ডাউনলোড করার জন্য কোনো ক্রয় পাওয়া যায়নি'); return; }
+  const headers = ['তারিখ', 'মেমো নম্বর', 'ব্র্যান্ড', 'সাপ্লায়ার/সোর্স', 'প্রোডাক্টসমূহ', 'মোট টাকা', 'পেইড টাকা', 'বাকি টাকা', 'পেমেন্ট মাধ্যম'];
   const rows = DB.purchases.map(p => [
     p.date, p.memo_no || '', brandName(p.brand_id), supplierName(p.supplier_id),
     p.items.map(i => `${i.name} x ${i.qty}`).join('; '), p.total, p.paid, p.due,
@@ -149,8 +190,8 @@ export function exportPurchasesExcel() {
 }
 
 export function exportPurchasesPDF() {
-  if (!DB.purchases.length) { alert('প্রিন্ট করার জন্য কোনো ক্রয় পাওয়া যায়নি'); return; }
-  const headerHtml = `<tr><th>তারিখ</th><th>মেমো</th><th>ব্র্যান্ড</th><th>সাপ্লায়ার</th><th>প্রোডাক্ট</th><th class="num">মোট</th><th class="num">পেইড</th><th>মাধ্যম</th><th class="num">বাকি</th></tr>`;
+  if (!DB.purchases.length) { alert('প্রিন্ট করার জন্য কোনো ক্রয় পাওয়া যায়নি'); return; }
+  const headerHtml = `<tr><th>তারিখ</th><th>মেমো</th><th>ব্র্যান্ড</th><th>সাপ্লায়ার</th><th>প্রোডাক্ট</th><th class="num">মোট</th><th class="num">পেইড</th><th>মাধ্যম</th><th class="num">বাকি</th></tr>`;
   const bodyHtml = DB.purchases.map(p => `
     <tr>
       <td>${dateBn(p.date)}</td><td>${p.memo_no || '-'}</td><td>${brandName(p.brand_id)}</td><td>${supplierName(p.supplier_id)}</td>
@@ -158,12 +199,12 @@ export function exportPurchasesPDF() {
       <td class="num">${taka(p.total)}</td><td class="num">${taka(p.paid)}</td>
       <td>${paymentMethodDisplay(p.payment_method, p.payment_account_id)}</td><td class="num">${taka(p.due)}</td>
     </tr>`).join('');
-  printSection('ক্রয় হিসাব রিপোর্ট', '', '', headerHtml, bodyHtml);
+  printSection('ক্রয় হিসাব রিপোর্ট', '', '', headerHtml, bodyHtml);
 }
 
 export function exportSalesExcel() {
-  if (!DB.sales.length) { alert('ডাউনলোড করার জন্য কোনো বিক্রয় পাওয়া যায়নি'); return; }
-  const headers = ['তারিখ', 'মেমো নম্বর', 'বিক্রয়ের ধরন', 'কাস্টমার', 'প্রোডাক্টসমূহ', 'মোট টাকা', 'পেইড টাকা', 'বাকি টাকা', 'পেমেন্ট মাধ্যম'];
+  if (!DB.sales.length) { alert('ডাউনলোড করার জন্য কোনো বিক্রয় পাওয়া যায়নি'); return; }
+  const headers = ['তারিখ', 'মেমো নম্বর', 'বিক্রয়ের ধরন', 'কাস্টমার', 'প্রোডাক্টসমূহ', 'মোট টাকা', 'পেইড টাকা', 'বাকি টাকা', 'পেমেন্ট মাধ্যম'];
   const rows = DB.sales.map(s => [
     s.date, s.memo_no || '', s.sale_type === 'wholesale' ? 'পাইকারি' : 'খুচরা', customerName(s.customer_id),
     s.items.map(i => `${i.name} x ${i.qty}`).join('; '), s.total, s.paid, s.due,
@@ -173,7 +214,7 @@ export function exportSalesExcel() {
 }
 
 export function exportSalesPDF() {
-  if (!DB.sales.length) { alert('প্রিন্ট করার জন্য কোনো বিক্রয় পাওয়া যায়নি'); return; }
+  if (!DB.sales.length) { alert('প্রিন্ট করার জন্য কোনো বিক্রয় পাওয়া যায়নি'); return; }
   const headerHtml = `<tr><th>তারিখ</th><th>মেমো</th><th>ধরন</th><th>কাস্টমার</th><th>প্রোডাক্ট</th><th class="num">মোট</th><th class="num">পেইড</th><th>মাধ্যম</th><th class="num">বাকি</th></tr>`;
   const bodyHtml = DB.sales.map(s => `
     <tr>
@@ -182,11 +223,11 @@ export function exportSalesPDF() {
       <td class="num">${taka(s.total)}</td><td class="num">${taka(s.paid)}</td>
       <td>${paymentMethodDisplay(s.payment_method, s.payment_account_id)}</td><td class="num">${taka(s.due)}</td>
     </tr>`).join('');
-  printSection('বিক্রয় হিসাব রিপোর্ট', '', '', headerHtml, bodyHtml);
+  printSection('বিক্রয় হিসাব রিপোর্ট', '', '', headerHtml, bodyHtml);
 }
 
 export function exportExpensesExcel() {
-  if (!DB.expenses.length) { alert('ডাউনলোড করার জন্য কোনো খরচ পাওয়া যায়নি'); return; }
+  if (!DB.expenses.length) { alert('ডাউনলোড করার জন্য কোনো খরচ পাওয়া যায়নি'); return; }
   const headers = ['তারিখ', 'খাত', 'নোট', 'টাকা', 'পেমেন্ট মাধ্যম'];
   const rows = DB.expenses.map(e => [
     e.date, e.category, e.note || '', e.amount, paymentMethodDisplay(e.payment_method, e.payment_account_id)
@@ -195,7 +236,7 @@ export function exportExpensesExcel() {
 }
 
 export function exportExpensesPDF() {
-  if (!DB.expenses.length) { alert('প্রিন্ট করার জন্য কোনো খরচ পাওয়া যায়নি'); return; }
+  if (!DB.expenses.length) { alert('প্রিন্ট করার জন্য কোনো খরচ পাওয়া যায়নি'); return; }
   const headerHtml = `<tr><th>তারিখ</th><th>খাত</th><th>নোট</th><th class="num">টাকা</th><th>পেমেন্ট মাধ্যম</th></tr>`;
   const bodyHtml = DB.expenses.map(e => `
     <tr>
@@ -207,6 +248,7 @@ export function exportExpensesPDF() {
 
 window.renderReport = renderReport;
 window.setQuickDate = setQuickDate;
+window.setReportTypeFilter = setReportTypeFilter;
 window.exportReportPDF = exportReportPDF;
 window.exportReportExcel = exportReportExcel;
 window.exportPurchasesExcel = exportPurchasesExcel;
@@ -215,3 +257,4 @@ window.exportSalesExcel = exportSalesExcel;
 window.exportSalesPDF = exportSalesPDF;
 window.exportExpensesExcel = exportExpensesExcel;
 window.exportExpensesPDF = exportExpensesPDF;
+
