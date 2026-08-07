@@ -271,6 +271,14 @@ export async function autoFixBrandProductMismatches() {
 
 export async function fixSyncGuardDiscrepancies() {
   setLoading(true);
+  const failures = []; // প্রতিটি ফেইল হওয়া আপডেটের কারণ এখানে জমা হবে, যাতে চুপচাপ ব্যর্থ না হয়
+
+  async function safeUpdate(table, patch, id, label) {
+    const { error } = await sb.from(table).update(patch).eq('id', id);
+    if (error) failures.push(`${label}: ${error.message}`);
+    return !error;
+  }
+
   try {
     const fixedBrand = await autoFixBrandProductMismatches();
 
@@ -280,16 +288,16 @@ export async function fixSyncGuardDiscrepancies() {
       const afterDiscount = Math.max(0, Number(p.total || 0) - Number(p.discount || 0));
       const expectedDue = Math.max(0, afterDiscount - Number(p.paid || 0));
       if (Math.abs(Number(p.due || 0) - expectedDue) > 0.01) {
-        await sb.from('purchases').update({ due: expectedDue }).eq('id', p.id);
-        p.due = expectedDue;
+        const ok = await safeUpdate('purchases', { due: expectedDue }, p.id, `ক্রয় (মেমো: ${p.memo_no || 'N/A'})`);
+        if (ok) p.due = expectedDue;
       }
     }
     for (const s of DB.sales) {
       const afterDiscount = Math.max(0, Number(s.total || 0) - Number(s.discount || 0));
       const expectedDue = Math.max(0, afterDiscount - Number(s.paid || 0));
       if (Math.abs(Number(s.due || 0) - expectedDue) > 0.01) {
-        await sb.from('sales').update({ due: expectedDue }).eq('id', s.id);
-        s.due = expectedDue;
+        const ok = await safeUpdate('sales', { due: expectedDue }, s.id, `বিক্রয় (মেমো: ${s.memo_no || 'N/A'})`);
+        if (ok) s.due = expectedDue;
       }
     }
 
@@ -299,7 +307,8 @@ export async function fixSyncGuardDiscrepancies() {
       const custPayments = DB.payments_customer.filter(p => p.customer_id === c.id).reduce((s, x) => s + x.amount, 0);
       const expectedDue = Math.max(0, custSalesDue - custPayments);
       if (Math.abs(c.due - expectedDue) > 0.01) {
-        await sb.from('customers').update({ due: expectedDue }).eq('id', c.id);
+        const ok = await safeUpdate('customers', { due: expectedDue }, c.id, `কাস্টমার '${c.name}'`);
+        if (ok) c.due = expectedDue;
       }
     }
 
@@ -309,7 +318,8 @@ export async function fixSyncGuardDiscrepancies() {
       const supPayments = DB.payments_supplier.filter(p => p.supplier_id === s.id).reduce((acc, x) => acc + x.amount, 0);
       const expectedDue = Math.max(0, supPurchasesDue - supPayments);
       if (Math.abs(s.due - expectedDue) > 0.01) {
-        await sb.from('suppliers').update({ due: expectedDue }).eq('id', s.id);
+        const ok = await safeUpdate('suppliers', { due: expectedDue }, s.id, `সাপ্লায়ার '${s.name}'`);
+        if (ok) s.due = expectedDue;
       }
     }
 
@@ -325,17 +335,27 @@ export async function fixSyncGuardDiscrepancies() {
       });
       const expectedQty = Math.max(0, purchasedQty - soldQty);
       if (prod.qty !== expectedQty) {
-        await sb.from('products').update({ qty: expectedQty }).eq('id', prod.id);
+        const ok = await safeUpdate('products', { qty: expectedQty }, prod.id, `প্রোডাক্ট '${prod.name}'`);
+        if (ok) prod.qty = expectedQty;
       }
     }
 
-    alert('🎉 সিঙ্ক গার্ড সফলভাবে সমস্ত ব্যালেন্স ও স্টক রিক্যালকুলেট ও ফিক্স করেছে!');
     await loadAll();
     if (window.renderCatalog) window.renderCatalog();
     if (window.renderPurchases) window.renderPurchases();
     if (window.renderDashboard) window.renderDashboard();
+
+    if (failures.length) {
+      // কিছু আপডেট সার্ভারে রিজেক্ট হয়েছে (সম্ভবত Supabase-এর RLS/permission policy) —
+      // তাই চুপচাপ ব্যর্থ না হয়ে আসল কারণ দেখানো হচ্ছে, নইলে "ফিক্স" বাটনে ক্লিক করলেও
+      // অমিল যেখানে ছিল সেখানেই থেকে যায় বলে মনে হবে।
+      alert('⚠️ কিছু আইটেম ফিক্স করা যায়নি (সার্ভার প্রত্যাখ্যান করেছে):\n\n' + failures.join('\n') +
+            '\n\nসম্ভবত Supabase-এ এই টেবিলগুলোর উপর UPDATE পারমিশন (RLS policy) সীমাবদ্ধ আছে — সেটা চেক করুন।');
+    } else {
+      alert('🎉 সিঙ্ক গার্ড সফলভাবে সমস্ত ব্যালেন্স ও স্টক রিক্যালকুলেট ও ফিক্স করেছে!');
+    }
   } catch (err) {
-    alert('ফিক্স করার সময় সমস্যা হয়েছে: ' + err.message);
+    alert('ফিক্স করার সময় সমস্যা হয়েছে: ' + err.message);
   } finally {
     setLoading(false);
   }

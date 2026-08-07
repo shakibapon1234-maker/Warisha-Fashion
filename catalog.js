@@ -42,7 +42,7 @@ export function renderProductSummary() {
               <td class="num">${r.qty} ${r.qty <= 3 ? '<span class="tag low">কম</span>' : ''}</td>
               <td class="num">${taka(r.value)}</td>
             </tr>`).join('')}
-          <tr style="background:#F7F4EA;">
+          <tr style="background:rgba(255,255,255,.06);">
             <td colspan="2"><b>সর্বমোট</b></td>
             <td class="num"><b>${totalQty}</b></td>
             <td class="num"><b>${taka(totalValue)}</b></td>
