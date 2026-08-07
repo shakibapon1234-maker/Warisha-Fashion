@@ -191,46 +191,64 @@ export function runSyncGuardAudit() {
   };
 }
 
-export async function fixSyncGuardDiscrepancies() {
-  const audit = runSyncGuardAudit();
-  if (audit.isHealthy) {
-    alert('✅ আপনার সব ব্যালেন্স ও স্টক ১০০% সিঙ্ক করা আছে! কোনো অমিল পাওয়া যায়নি।');
-    return;
-  }
+export async function autoFixBrandProductMismatches() {
+  let changed = false;
+  if (!DB.purchases || !DB.products) return false;
 
-  if (!confirm(`সিঙ্ক গার্ড ${audit.issuesCount} টি অমিল শনাক্ত করেছে। আপনি কি ক্রয়-বিক্রয়ের সূত্র ধরে সমস্ত ব্যালেন্স ও স্টক অটোমেটিক ফিক্স করবেন?`)) return;
-
-  setLoading(true);
-  try {
-    // 1. Separate Purchase Items & Products by Brand if purchase brand != product brand
-    for (const p of DB.purchases) {
-      if (!p.brand_id) continue;
-      for (const it of p.items) {
-        const prod = DB.products.find(x => x.id === it.product_id);
-        if (prod && prod.brand_id !== p.brand_id) {
-          let brandProd = DB.products.find(x => x.brand_id === p.brand_id && x.name.trim().toLowerCase() === prod.name.trim().toLowerCase());
-          if (!brandProd) {
-            const { data: newP, error: nErr } = await sb.from('products').insert({
-              brand_id: p.brand_id,
-              name: prod.name,
-              category: prod.category || '',
-              size: prod.size || '',
-              color: prod.color || '',
-              buy_price: it.cost || prod.buy_price,
-              qty: 0
-            }).select().single();
-            if (!nErr && newP) {
-              brandProd = { ...newP, buy_price: Number(newP.buy_price), qty: Number(newP.qty) };
-              DB.products.push(brandProd);
-            }
+  for (const p of DB.purchases) {
+    if (!p.brand_id) continue;
+    for (const it of p.items) {
+      const prod = DB.products.find(x => x.id === it.product_id);
+      if (prod && prod.brand_id !== p.brand_id) {
+        changed = true;
+        let brandProd = DB.products.find(x => x.brand_id === p.brand_id && x.name.trim().toLowerCase() === prod.name.trim().toLowerCase());
+        if (!brandProd) {
+          const { data: newP, error: nErr } = await sb.from('products').insert({
+            brand_id: p.brand_id,
+            name: prod.name,
+            category: prod.category || '',
+            size: prod.size || '',
+            color: prod.color || '',
+            buy_price: it.cost || prod.buy_price,
+            qty: 0
+          }).select().single();
+          if (!nErr && newP) {
+            brandProd = { ...newP, buy_price: Number(newP.buy_price), qty: Number(newP.qty) };
+            DB.products.push(brandProd);
           }
-          if (brandProd) {
-            await sb.from('purchase_items').update({ product_id: brandProd.id }).eq('purchase_id', p.id).eq('product_id', it.product_id);
-            it.product_id = brandProd.id;
-          }
+        }
+        if (brandProd) {
+          await sb.from('purchase_items').update({ product_id: brandProd.id }).eq('purchase_id', p.id).eq('product_id', it.product_id);
+          it.product_id = brandProd.id;
         }
       }
     }
+  }
+
+  // Recalculate product stock quantities
+  for (const prod of DB.products) {
+    let purchasedQty = 0;
+    DB.purchases.forEach(p => {
+      p.items.forEach(it => { if (it.product_id === prod.id) purchasedQty += Number(it.qty || 0); });
+    });
+    let soldQty = 0;
+    DB.sales.forEach(s => {
+      s.items.forEach(it => { if (it.product_id === prod.id) soldQty += Number(it.qty || 0); });
+    });
+    const expectedQty = Math.max(0, purchasedQty - soldQty);
+    if (prod.qty !== expectedQty) {
+      changed = true;
+      await sb.from('products').update({ qty: expectedQty }).eq('id', prod.id);
+      prod.qty = expectedQty;
+    }
+  }
+  return changed;
+}
+
+export async function fixSyncGuardDiscrepancies() {
+  setLoading(true);
+  try {
+    const fixedBrand = await autoFixBrandProductMismatches();
 
     // 2. Fix Customers
     for (const c of DB.customers) {
@@ -270,6 +288,9 @@ export async function fixSyncGuardDiscrepancies() {
 
     alert('🎉 সিঙ্ক গার্ড সফলভাবে সমস্ত ব্যালেন্স ও স্টক রিক্যালকুলেট ও ফিক্স করেছে!');
     await loadAll();
+    if (window.renderCatalog) window.renderCatalog();
+    if (window.renderPurchases) window.renderPurchases();
+    if (window.renderDashboard) window.renderDashboard();
   } catch (err) {
     alert('ফিক্স করার সময় সমস্যা হয়েছে: ' + err.message);
   } finally {
@@ -282,3 +303,4 @@ window.importSystemBackupJSON = importSystemBackupJSON;
 window.checkDailyAutoBackup = checkDailyAutoBackup;
 window.runSyncGuardAudit = runSyncGuardAudit;
 window.fixSyncGuardDiscrepancies = fixSyncGuardDiscrepancies;
+window.autoFixBrandProductMismatches = autoFixBrandProductMismatches;
