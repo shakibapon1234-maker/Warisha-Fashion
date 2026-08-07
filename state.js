@@ -34,7 +34,7 @@ export async function ensureSupplier(name) {
   return data;
 }
 
-export async function loadAll() {
+export async function loadAll(opts = {}) {
   setLoading(true);
   try {
     const [brandsR, productsR, suppliersR, customersR, purchasesR, salesR, pcR, psR, invR, acR, asR, expR, paR] = await Promise.all([
@@ -71,17 +71,21 @@ export async function loadAll() {
     DB.advances_supplier = (asR.data || []).map(x => ({ ...x, amount: Number(x.amount), payment_method: x.payment_method || 'cash', payment_account_id: x.payment_account_id || null }));
     DB.expenses = (expR.data || []).map(x => ({ ...x, amount: Number(x.amount), payment_method: x.payment_method || 'cash', payment_account_id: x.payment_account_id || null }));
     DB.payment_accounts = paR.data || [];
-    setTimeout(async () => {
-      if (window.autoFixBrandProductMismatches) {
-        const fixed = await window.autoFixBrandProductMismatches();
-        if (fixed) {
-          if (window.renderCatalog) window.renderCatalog();
-          if (window.renderPurchases) window.renderPurchases();
-          if (window.renderDashboard) window.renderDashboard();
+    if (!opts.skipAutoHeal) {
+      setTimeout(async () => {
+        if (window.autoFixBrandProductMismatches) {
+          const fixed = await window.autoFixBrandProductMismatches();
+          if (fixed) {
+            if (window.renderCatalog) window.renderCatalog();
+            if (window.renderPurchases) window.renderPurchases();
+            if (window.renderDashboard) window.renderDashboard();
+          }
         }
-      }
-      if (window.checkDailyAutoBackup) window.checkDailyAutoBackup();
-    }, 500);
+        if (window.checkDailyAutoBackup) window.checkDailyAutoBackup();
+      }, 500);
+    } else if (window.checkDailyAutoBackup) {
+      window.checkDailyAutoBackup();
+    }
   } catch (e) {
     console.error(e); alert('ডেটা লোড করতে সমস্যা হয়েছে: ' + (e.message || e));
   } finally {

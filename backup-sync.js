@@ -369,7 +369,8 @@ export async function fixSyncGuardDiscrepancies() {
       }
     }
 
-    await loadAll();
+    await loadAll({ skipAutoHeal: true }); // fixSyncGuardDiscrepancies is already a full audit+fix pass —
+                                            // skip loadAll's own delayed auto-heal so it can't race with this run
     if (window.renderCatalog) window.renderCatalog();
     if (window.renderPurchases) window.renderPurchases();
     if (window.renderSales) window.renderSales();
@@ -377,9 +378,17 @@ export async function fixSyncGuardDiscrepancies() {
     if (window.renderDashboard) window.renderDashboard();
     if (window.renderBackupAndSyncSettings) window.renderBackupAndSyncSettings();
 
+    // চূড়ান্ত যাচাই: ফিক্সের পর সত্যিই সব ঠিক হয়েছে কিনা আবার অডিট করে নিশ্চিত হও,
+    // যাতে মিথ্যা "সফল" বার্তা না দেখায়
+    const recheck = runSyncGuardAudit();
+
     if (failures.length) {
       alert('⚠️ কিছু আইটেম ফিক্স করা যায়নি (সার্ভার প্রত্যাখ্যান করেছে):\n\n' + failures.join('\n') +
             '\n\nসম্ভবত Supabase-এ এই টেবিলগুলোর উপর UPDATE পারমিশন (RLS policy) সীমাবদ্ধ আছে — সেটা চেক করুন।');
+    } else if (!recheck.isHealthy) {
+      alert('⚠️ ফিক্স চালানো হয়েছে, কিন্তু এখনও ' + recheck.issuesCount + ' টি অমিল থেকে গেছে:\n\n' +
+            recheck.issues.join('\n') +
+            '\n\nএটি সাধারণত একটি জেনুইন ডেটা এন্ট্রি ভুলের কারণে হয় (যেমন ডুপ্লিকেট প্রোডাক্ট) — উপরের তালিকা দেখে ম্যানুয়ালি চেক করুন।');
     } else {
       alert('🎉 সিঙ্ক গার্ড সফলভাবে সমস্ত ব্যালেন্স ও স্টক রিক্যালকুলেট ও ফিক্স করেছে!');
     }
