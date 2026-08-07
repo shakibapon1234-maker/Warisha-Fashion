@@ -150,7 +150,7 @@ export function runSyncGuardAudit() {
     }
   });
 
-  // Audit Product Stock Quantities & Brand Mismatches
+  // Audit Product Stock Quantities
   DB.products.forEach(prod => {
     let purchasedQty = 0;
     DB.purchases.forEach(p => {
@@ -170,14 +170,18 @@ export function runSyncGuardAudit() {
     if (prod.qty !== expectedQty) {
       issues.push(`প্রোডাক্ট '${prod.name}': বর্তমান মজুদ স্টক ${prod.qty} পিস, তবে ক্রয়-বিক্রয় হিসেব অনুযায়ী হওয়ার কথা ${expectedQty} পিস`);
     }
+  });
 
-    // Check if product's latest purchase brand differs from its product brand
-    const latestPurchase = DB.purchases.find(p => p.items.some(it => it.product_id === prod.id));
-    if (latestPurchase && latestPurchase.brand_id && latestPurchase.brand_id !== prod.brand_id) {
-      const pBrand = DB.brands.find(b => b.id === latestPurchase.brand_id)?.name || 'অজানা';
-      const cBrand = DB.brands.find(b => b.id === prod.brand_id)?.name || 'অজানা';
-      issues.push(`প্রোডাক্ট '${prod.name}': ক্রয়ে ব্র্যান্ড দেওয়া হয়েছে '${pBrand}', কিন্তু ক্যাটালগে আছে '${cBrand}'`);
-    }
+  // Audit Product Brand Mismatches with Purchases
+  DB.purchases.forEach(p => {
+    p.items.forEach(it => {
+      const prod = DB.products.find(x => x.id === it.product_id);
+      if (prod && prod.brand_id !== p.brand_id) {
+        const pBrand = DB.brands.find(b => b.id === p.brand_id)?.name || 'অজানা';
+        const cBrand = DB.brands.find(b => b.id === prod.brand_id)?.name || 'অজানা';
+        issues.push(`ক্রয় (মেমো: ${p.memo_no || 'N/A'}): প্রোডাক্ট '${prod.name}' ক্যাটালগে '${cBrand}' কিন্তু ক্রয়ে '${pBrand}' ধরা আছে`);
+      }
+    });
   });
 
   return {
@@ -198,7 +202,37 @@ export async function fixSyncGuardDiscrepancies() {
 
   setLoading(true);
   try {
-    // Fix Customers
+    // 1. Separate Purchase Items & Products by Brand if purchase brand != product brand
+    for (const p of DB.purchases) {
+      if (!p.brand_id) continue;
+      for (const it of p.items) {
+        const prod = DB.products.find(x => x.id === it.product_id);
+        if (prod && prod.brand_id !== p.brand_id) {
+          let brandProd = DB.products.find(x => x.brand_id === p.brand_id && x.name.trim().toLowerCase() === prod.name.trim().toLowerCase());
+          if (!brandProd) {
+            const { data: newP, error: nErr } = await sb.from('products').insert({
+              brand_id: p.brand_id,
+              name: prod.name,
+              category: prod.category || '',
+              size: prod.size || '',
+              color: prod.color || '',
+              buy_price: it.cost || prod.buy_price,
+              qty: 0
+            }).select().single();
+            if (!nErr && newP) {
+              brandProd = { ...newP, buy_price: Number(newP.buy_price), qty: Number(newP.qty) };
+              DB.products.push(brandProd);
+            }
+          }
+          if (brandProd) {
+            await sb.from('purchase_items').update({ product_id: brandProd.id }).eq('purchase_id', p.id).eq('product_id', it.product_id);
+            it.product_id = brandProd.id;
+          }
+        }
+      }
+    }
+
+    // 2. Fix Customers
     for (const c of DB.customers) {
       const custSalesDue = DB.sales.filter(s => s.customer_id === c.id).reduce((s, x) => s + x.due, 0);
       const custPayments = DB.payments_customer.filter(p => p.customer_id === c.id).reduce((s, x) => s + x.amount, 0);
@@ -208,7 +242,7 @@ export async function fixSyncGuardDiscrepancies() {
       }
     }
 
-    // Fix Suppliers
+    // 3. Fix Suppliers
     for (const s of DB.suppliers) {
       const supPurchasesDue = DB.purchases.filter(p => p.supplier_id === s.id).reduce((acc, x) => acc + x.due, 0);
       const supPayments = DB.payments_supplier.filter(p => p.supplier_id === s.id).reduce((acc, x) => acc + x.amount, 0);
@@ -218,7 +252,7 @@ export async function fixSyncGuardDiscrepancies() {
       }
     }
 
-    // Fix Product Stock & Brand Mismatches
+    // 4. Fix Product Stock Quantities
     for (const prod of DB.products) {
       let purchasedQty = 0;
       DB.purchases.forEach(p => {
@@ -229,12 +263,8 @@ export async function fixSyncGuardDiscrepancies() {
         s.items.forEach(it => { if (it.product_id === prod.id) soldQty += Number(it.qty || 0); });
       });
       const expectedQty = Math.max(0, purchasedQty - soldQty);
-
-      const latestPurchase = DB.purchases.find(p => p.items.some(it => it.product_id === prod.id));
-      const targetBrandId = (latestPurchase && latestPurchase.brand_id) ? latestPurchase.brand_id : prod.brand_id;
-
-      if (prod.qty !== expectedQty || prod.brand_id !== targetBrandId) {
-        await sb.from('products').update({ qty: expectedQty, brand_id: targetBrandId }).eq('id', prod.id);
+      if (prod.qty !== expectedQty) {
+        await sb.from('products').update({ qty: expectedQty }).eq('id', prod.id);
       }
     }
 
