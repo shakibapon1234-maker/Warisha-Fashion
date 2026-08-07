@@ -15,8 +15,15 @@ export function paymentAccountName(id) { const a = DB.payment_accounts.find(a =>
 
 export async function ensureCustomer(name, phone) {
   if (!name) return null;
-  let c = DB.customers.find(c => c.name.trim() === name.trim());
-  if (c) return c;
+  // Re-fetch fresh list to catch concurrent inserts from multiple tabs
+  const { data: freshList } = await sb.from('customers').select('id,name,due,advance').eq('name', name.trim());
+  if (freshList && freshList.length > 0) {
+    const found = freshList[0];
+    found.due = Number(found.due); found.advance = Number(found.advance);
+    // Sync into local DB cache if not already there
+    if (!DB.customers.find(c => c.id === found.id)) DB.customers.push(found);
+    return found;
+  }
   const { data, error } = await sb.from('customers').insert({ name: name.trim(), phone: phone || '', due: 0, advance: 0 }).select().single();
   if (error) { alert('কাস্টমার তৈরি ব্যর্থ: ' + error.message); throw error; }
   data.due = Number(data.due); data.advance = Number(data.advance);
@@ -25,8 +32,14 @@ export async function ensureCustomer(name, phone) {
 }
 export async function ensureSupplier(name) {
   if (!name) return null;
-  let s = DB.suppliers.find(s => s.name.trim() === name.trim());
-  if (s) return s;
+  // Re-fetch fresh list to catch concurrent inserts
+  const { data: freshList } = await sb.from('suppliers').select('id,name,due,advance').eq('name', name.trim());
+  if (freshList && freshList.length > 0) {
+    const found = freshList[0];
+    found.due = Number(found.due); found.advance = Number(found.advance);
+    if (!DB.suppliers.find(s => s.id === found.id)) DB.suppliers.push(found);
+    return found;
+  }
   const { data, error } = await sb.from('suppliers').insert({ name: name.trim(), due: 0, advance: 0 }).select().single();
   if (error) { alert('সাপ্লায়ার তৈরি ব্যর্থ: ' + error.message); throw error; }
   data.due = Number(data.due); data.advance = Number(data.advance);
@@ -37,7 +50,7 @@ export async function ensureSupplier(name) {
 export async function loadAll(opts = {}) {
   setLoading(true);
   try {
-    const [brandsR, productsR, suppliersR, customersR, purchasesR, salesR, pcR, psR, invR, acR, asR, expR, paR] = await Promise.all([
+    const results = await Promise.all([
       sb.from('brands').select('*').order('name'),
       sb.from('products').select('*').order('name'),
       sb.from('suppliers').select('*').order('name'),
@@ -52,6 +65,10 @@ export async function loadAll(opts = {}) {
       sb.from('expenses').select('*'),
       sb.from('payment_accounts').select('*').order('type').order('name'),
     ]);
+    const tableNames = ['brands','products','suppliers','customers','purchases','sales','payments_customer','payments_supplier','investments','advances_customer','advances_supplier','expenses','payment_accounts'];
+    const errors = results.map((r, i) => r.error ? `${tableNames[i]}: ${r.error.message}` : null).filter(Boolean);
+    if (errors.length) console.warn('ডেটা লোড সমস্যা:', errors.join('; '));
+    const [brandsR, productsR, suppliersR, customersR, purchasesR, salesR, pcR, psR, invR, acR, asR, expR, paR] = results;
     DB.brands = brandsR.data || [];
     DB.products = (productsR.data || []).map(p => ({ ...p, buy_price: Number(p.buy_price), qty: Number(p.qty) }));
     DB.suppliers = (suppliersR.data || []).map(s => ({ ...s, due: Number(s.due), advance: Number(s.advance) }));

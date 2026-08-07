@@ -1,5 +1,5 @@
 import { DB, brandName, customerName, supplierName } from './state.js';
-import { taka, val, dateBn, todayISO, emptyState } from './utils.js';
+import { taka, val, dateBn, todayISO, emptyState, escapeHTML } from './utils.js';
 import { paymentMethodDisplay } from './payment-accounts.js';
 import { downloadCSV, printSection } from './export.js';
 
@@ -143,8 +143,8 @@ export function renderReport() {
     wrap.innerHTML = rows.length ? `
       <table><thead><tr><th>তারিখ</th><th>ধরন</th><th>বিবরণ</th><th>পেমেন্ট মাধ্যম</th><th>টাকা</th></tr></thead>
       <tbody>${rows.map(r => `<tr>
-        <td>${dateBn(r.date)}</td><td>${r.type}</td><td>${r.desc}</td>
-        <td><span class="tag ${r.dir === 'in' ? 'cash' : 'bank'}">${r.method}</span></td>
+        <td>${dateBn(r.date)}</td><td>${escapeHTML(r.type)}</td><td>${escapeHTML(r.desc)}</td>
+        <td><span class="tag ${r.dir === 'in' ? 'cash' : 'bank'}">${escapeHTML(r.method)}</span></td>
         <td class="num" style="color:${r.dir === 'in' ? 'var(--success)' : 'var(--danger)'};font-weight:700;">${r.dir === 'in' ? '+' : '-'}${taka(r.amt)}</td>
       </tr>`).join('')}</tbody></table>`
       : emptyState('কোনো লেনদেন পাওয়া যায়নি', 'ফিল্টার বা তারিখের রেঞ্জ পরিবর্তন করে দেখুন');

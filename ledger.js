@@ -1,6 +1,6 @@
 import { sb } from './supabaseClient.js';
 import { DB, loadAll } from './state.js';
-import { taka, val, todayISO, emptyState, paymentMethodOptions, setLoading } from './utils.js';
+import { taka, val, todayISO, emptyState, escapeHTML, paymentMethodOptions, setLoading } from './utils.js';
 import { openModal, closeModal } from './modal.js';
 import { resolvePaymentSelection } from './payment-accounts.js';
 
@@ -20,7 +20,7 @@ export function renderLedger() {
       <thead><tr><th>নাম</th><th>ফোন</th><th>পাওনা</th><th>অগ্রিম জমা</th><th></th></tr></thead>
       <tbody>${DB.customers.map(c => `
         <tr>
-          <td>${c.name}</td><td>${c.phone || '-'}</td>
+          <td>${escapeHTML(c.name)}</td><td>${escapeHTML(c.phone || '-')}</td>
           <td class="num">${c.due > 0 ? `<span class="tag due">${taka(c.due)}</span>` : `<span class="tag paid">নেই</span>`}</td>
           <td class="num">${c.advance > 0 ? taka(c.advance) : '-'}</td>
           <td><div class="row-actions">
@@ -34,7 +34,7 @@ export function renderLedger() {
       <thead><tr><th>নাম</th><th>দেনা</th><th>অগ্রিম দেওয়া</th><th></th></tr></thead>
       <tbody>${DB.suppliers.map(s => `
         <tr>
-          <td>${s.name}</td>
+          <td>${escapeHTML(s.name)}</td>
           <td class="num">${s.due > 0 ? `<span class="tag due">${taka(s.due)}</span>` : `<span class="tag paid">নেই</span>`}</td>
           <td class="num">${s.advance > 0 ? taka(s.advance) : '-'}</td>
           <td><div class="row-actions">

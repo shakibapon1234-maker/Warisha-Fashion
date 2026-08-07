@@ -1,5 +1,5 @@
 import { DB, brandName, customerName, supplierName } from './state.js';
-import { taka, dateBn, todayISO, emptyState } from './utils.js';
+import { taka, dateBn, todayISO, emptyState, escapeHTML } from './utils.js';
 import { runSyncGuardAudit } from './backup-sync.js';
 
 /* ============================================================ DASHBOARD */
@@ -87,28 +87,28 @@ export function renderDashboard() {
   const low = DB.products.filter(p => p.qty <= 3);
   document.getElementById('lowStockList').innerHTML = low.length ? low.map(p => {
     const meta = [p.color, p.size].filter(Boolean).join(', ');
-    const metaStr = meta ? ` (${meta})` : '';
+    const metaStr = meta ? ` (${escapeHTML(meta)})` : '';
     return `
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13.5px;">
-      <span>${p.name} — ${brandName(p.brand_id)}${metaStr}</span>
+      <span>${escapeHTML(p.name)} — ${escapeHTML(brandName(p.brand_id))}${metaStr}</span>
       <span class="tag low">মাত্র ${p.qty} পিস</span>
     </div>`;
   }).join('') : `<div class="helper">সব প্রোডাক্টের স্টক ঠিক আছে।</div>`;
 
   const recents = [
-    ...DB.sales.map(x => ({ date: x.date, text: `বিক্রয় (${x.sale_type === 'wholesale' ? 'পাইকারি' : 'খুচরা'}) — ${customerName(x.customer_id)}`, amount: x.paid, dir: 'in' })),
-    ...DB.payments_customer.map(x => ({ date: x.date, text: `বকেয়া আদায় — ${customerName(x.customer_id)}`, amount: x.amount, dir: 'in' })),
-    ...DB.investments.map(x => ({ date: x.date, text: `ইনভেস্টমেন্ট — ${x.person}`, amount: x.amount, dir: 'in' })),
-    ...DB.advances_customer.map(x => ({ date: x.date, text: `গ্রাহক অগ্রিম — ${customerName(x.customer_id)}`, amount: x.amount, dir: 'in' })),
-    ...DB.purchases.map(x => ({ date: x.date, text: `ক্রয় (${brandName(x.brand_id)}) — ${supplierName(x.supplier_id)}`, amount: x.paid, dir: 'out' })),
-    ...DB.expenses.map(x => ({ date: x.date, text: `খরচ — ${x.category}`, amount: x.amount, dir: 'out' })),
-    ...DB.payments_supplier.map(x => ({ date: x.date, text: `সাপ্লায়ার বকেয়া পরিশোধ — ${supplierName(x.supplier_id)}`, amount: x.amount, dir: 'out' })),
-    ...DB.advances_supplier.map(x => ({ date: x.date, text: `সাপ্লায়ার অগ্রিম — ${supplierName(x.supplier_id)}`, amount: x.amount, dir: 'out' })),
+    ...DB.sales.map(x => ({ date: x.date, text: `বিক্রয় (${x.sale_type === 'wholesale' ? 'পাইকারি' : 'খুচরা'}) — ${escapeHTML(customerName(x.customer_id))}`, amount: x.paid, dir: 'in' })),
+    ...DB.payments_customer.map(x => ({ date: x.date, text: `বকেয়া আদায় — ${escapeHTML(customerName(x.customer_id))}`, amount: x.amount, dir: 'in' })),
+    ...DB.investments.map(x => ({ date: x.date, text: `ইনভেস্টমেন্ট — ${escapeHTML(x.person)}`, amount: x.amount, dir: 'in' })),
+    ...DB.advances_customer.map(x => ({ date: x.date, text: `গ্রাহক অগ্রিম — ${escapeHTML(customerName(x.customer_id))}`, amount: x.amount, dir: 'in' })),
+    ...DB.purchases.map(x => ({ date: x.date, text: `ক্রয় (${escapeHTML(brandName(x.brand_id))}) — ${escapeHTML(supplierName(x.supplier_id))}`, amount: x.paid, dir: 'out' })),
+    ...DB.expenses.map(x => ({ date: x.date, text: `খরচ — ${escapeHTML(x.category)}`, amount: x.amount, dir: 'out' })),
+    ...DB.payments_supplier.map(x => ({ date: x.date, text: `সাপ্লায়ার বকেয়া পরিশোধ — ${escapeHTML(supplierName(x.supplier_id))}`, amount: x.amount, dir: 'out' })),
+    ...DB.advances_supplier.map(x => ({ date: x.date, text: `সাপ্লায়ার অগ্রিম — ${escapeHTML(supplierName(x.supplier_id))}`, amount: x.amount, dir: 'out' })),
   ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
 
   document.getElementById('recentList').innerHTML = recents.length ? recents.map(r => `
     <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13.5px;">
-      <span>${r.text}<br><span class="helper">${dateBn(r.date)}</span></span>
+      <span>${escapeHTML(r.text)}<br><span class="helper">${dateBn(r.date)}</span></span>
       <span class="num" style="color:${r.dir === 'in' ? 'var(--success)' : 'var(--danger)'};font-weight:700;">${r.dir === 'in' ? '+' : '-'}${taka(r.amount)}</span>
     </div>`).join('') : emptyState('এখনো কোনো লেনদেন নেই', '');
 }

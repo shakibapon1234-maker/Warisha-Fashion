@@ -244,23 +244,31 @@ export function renderSecurityQuestionsSettings() {
     </div>`;
 }
 
-export function saveSecurityQuestionsSettings() {
-  const q1 = val('secQ1'), a1 = val('secAns1').trim().toLowerCase();
-  const q2 = val('secQ2'), a2 = val('secAns2').trim().toLowerCase();
+async function hashAnswer(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode((str || '').trim().toLowerCase()));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+export async function saveSecurityQuestionsSettings() {
+  const q1 = val('secQ1'), a1Raw = val('secAns1').trim().toLowerCase();
+  const q2 = val('secQ2'), a2Raw = val('secAns2').trim().toLowerCase();
   const msg = document.getElementById('secQMsg');
   if (msg) msg.style.display = 'block';
 
-  if (!a1 || !a2) {
+  if (!a1Raw || !a2Raw) {
     if (msg) { msg.style.color = 'var(--danger)'; msg.textContent = 'দুইটি প্রশ্নেরই উত্তর দিন'; }
     return;
   }
-  const data = { q1, a1, q2, a2 };
-  localStorage.setItem('warisha_sec_questions', JSON.stringify(data));
-  sb.auth.updateUser({ data: { sec_q: data } }).catch(() => {});
-  if (msg) {
-    msg.style.color = 'var(--success)';
-    msg.textContent = '✅ সিকিউরিটি প্রশ্ন সফলভাবে সেভ করা হয়েছে!';
-  }
+  // Hash the answers before storing — plain text never persisted
+  Promise.all([hashAnswer(a1Raw), hashAnswer(a2Raw)]).then(([a1, a2]) => {
+    const data = { q1, a1, q2, a2, v: 2 }; // v:2 = hashed version
+    localStorage.setItem('warisha_sec_questions', JSON.stringify(data));
+    sb.auth.updateUser({ data: { sec_q: { q1, q2, v: 2 } } }).catch(() => {});
+    if (msg) {
+      msg.style.color = 'var(--success)';
+      msg.textContent = '✅ সিকিউরিটি প্রশ্ন সফলভাবে সেভ করা হয়েছে!';
+    }
+  });
 }
 
 window.handleUpdateEmail = handleUpdateEmail;

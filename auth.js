@@ -13,12 +13,12 @@ export async function handleLogin() {
   if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
 }
 export async function handleSignup() {
-  const email = val('authEmail'), password = val('authPassword');
-  const errEl = document.getElementById('authError'); errEl.style.display = 'none';
-  if (!email || !password) { errEl.style.color = 'var(--danger)'; errEl.textContent = 'ইমেইল ও পাসওয়ার্ড দিন'; errEl.style.display = 'block'; return; }
-  const { error } = await sb.auth.signUp({ email, password });
-  if (error) { errEl.style.color = 'var(--danger)'; errEl.textContent = error.message; errEl.style.display = 'block'; }
-  else { errEl.style.color = 'var(--success)'; errEl.textContent = 'অ্যাকাউন্ট তৈরি হয়েছে। ইমেইল কনফার্মেশন লাগলে ইনবক্স চেক করে তারপর লগইন করুন।'; errEl.style.display = 'block'; }
+  // ⛔ নতুন অ্যাকাউন্ট তৈরি বন্ধ রাখা হয়েছে।
+  // শুধুমাত্র মালিক Dashboard থেকে ম্যানুয়ালি ইউজার তৈরি করতে পারবেন।
+  const errEl = document.getElementById('authError');
+  errEl.style.color = 'var(--danger)';
+  errEl.textContent = 'নতুন অ্যাকাউন্ট তৈরি বন্ধ আছে। দোকানের মালিকের সাথে যোগাযোগ করুন।';
+  errEl.style.display = 'block';
 }
 export async function handleLogout() { await sb.auth.signOut(); }
 export async function showApp(user) {
@@ -106,19 +106,34 @@ export async function handleSendEmailReset(presetEmail) {
   }
 }
 
+async function hashAnswer(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode((str || '').trim().toLowerCase()));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export async function handleResetWithSecurityQuestions() {
   const saved = getSavedSecurityQuestions();
   const msg = document.getElementById('resetMsg');
   if (msg) msg.style.display = 'block';
 
-  const a1 = (val('secA1') || '').trim().toLowerCase();
-  const a2 = saved && saved.q2 ? (val('secA2') || '').trim().toLowerCase() : '';
+  const a1Raw = (val('secA1') || '').trim().toLowerCase();
+  const a2Raw = saved && saved.q2 ? (val('secA2') || '').trim().toLowerCase() : '';
   const p1 = val('newResetPw'), p2 = val('newResetPw2');
 
-  if (!a1 || (saved.q2 && !a2)) {
+  if (!a1Raw || (saved.q2 && !a2Raw)) {
     msg.style.color = 'var(--danger)'; msg.textContent = 'সিকিউরিটি প্রশ্নের উত্তর দিন'; return;
   }
-  if (a1 !== saved.a1 || (saved.q2 && a2 !== saved.a2)) {
+
+  // Support both v:2 (hashed) and legacy plain-text stored answers
+  const isHashed = saved.v === 2;
+  let a1Check, a2Check;
+  if (isHashed) {
+    [a1Check, a2Check] = await Promise.all([hashAnswer(a1Raw), saved.q2 ? hashAnswer(a2Raw) : Promise.resolve('')]);
+  } else {
+    a1Check = a1Raw; a2Check = a2Raw;
+  }
+
+  if (a1Check !== saved.a1 || (saved.q2 && a2Check !== saved.a2)) {
     msg.style.color = 'var(--danger)'; msg.textContent = 'সিকিউরিটি প্রশ্নের উত্তর মিলছে না!'; return;
   }
   if (!p1 || p1.length < 6) {

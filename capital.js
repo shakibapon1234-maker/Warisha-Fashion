@@ -1,6 +1,6 @@
 import { sb } from './supabaseClient.js';
 import { DB, loadAll, ensureCustomer, ensureSupplier, customerName, supplierName } from './state.js';
-import { taka, val, todayISO, dateBn, emptyState, paymentMethodOptions, setLoading } from './utils.js';
+import { taka, val, todayISO, dateBn, emptyState, escapeHTML, paymentMethodOptions, setLoading } from './utils.js';
 import { openModal, closeModal } from './modal.js';
 import { resolvePaymentSelection, paymentMethodDisplay, renderPaymentAccountField } from './payment-accounts.js';
 
@@ -23,9 +23,9 @@ export function renderCapital() {
     const rows = [...DB.investments].sort((a, b) => b.date.localeCompare(a.date));
     document.getElementById('investTable').innerHTML = rows.length ? `
       <table><thead><tr><th>তারিখ</th><th>কে দিলেন</th><th>নোট</th><th>টাকা</th><th>মাধ্যম</th><th></th></tr></thead>
-      <tbody>${rows.map(x => `<tr><td>${dateBn(x.date)}</td><td>${x.person}</td><td>${x.note || '-'}</td>
+      <tbody>${rows.map(x => `<tr><td>${dateBn(x.date)}</td><td>${escapeHTML(x.person)}</td><td>${escapeHTML(x.note || '-')}</td>
         <td class="num">${taka(x.amount)}</td>
-        <td><span class="tag ${x.payment_method}">${paymentMethodDisplay(x.payment_method, x.payment_account_id)}</span></td>
+        <td><span class="tag ${x.payment_method}">${escapeHTML(paymentMethodDisplay(x.payment_method, x.payment_account_id))}</span></td>
         <td><div class="row-actions">
           <button class="btn btn-ghost btn-sm" onclick="openEditInvestModal('${x.id}')">এডিট</button>
           <button class="btn btn-danger-ghost btn-sm" onclick="deleteInvest('${x.id}')">ডিলিট</button>
@@ -45,8 +45,8 @@ export function renderCapital() {
     const cr = [...DB.advances_customer].sort((a, b) => b.date.localeCompare(a.date));
     document.getElementById('custAdvTable').innerHTML = cr.length ? `
       <table><thead><tr><th>তারিখ</th><th>কাস্টমার</th><th>নোট</th><th>টাকা</th><th>মাধ্যম</th><th></th></tr></thead>
-      <tbody>${cr.map(x => `<tr><td>${dateBn(x.date)}</td><td>${customerName(x.customer_id)}</td><td>${x.note || '-'}</td><td class="num">${taka(x.amount)}</td>
-        <td><span class="tag ${x.payment_method}">${paymentMethodDisplay(x.payment_method, x.payment_account_id)}</span></td>
+      <tbody>${cr.map(x => `<tr><td>${dateBn(x.date)}</td><td>${escapeHTML(customerName(x.customer_id))}</td><td>${escapeHTML(x.note || '-')}</td><td class="num">${taka(x.amount)}</td>
+        <td><span class="tag ${x.payment_method}">${escapeHTML(paymentMethodDisplay(x.payment_method, x.payment_account_id))}</span></td>
         <td><div class="row-actions">
           <button class="btn btn-ghost btn-sm" onclick="openEditAdvanceModal('customer','${x.id}')">এডিট</button>
           <button class="btn btn-danger-ghost btn-sm" onclick="deleteAdvance('customer','${x.id}','${x.customer_id}',${x.amount})">ডিলিট</button>
@@ -55,8 +55,8 @@ export function renderCapital() {
     const sr = [...DB.advances_supplier].sort((a, b) => b.date.localeCompare(a.date));
     document.getElementById('supAdvTable').innerHTML = sr.length ? `
       <table><thead><tr><th>তারিখ</th><th>সাপ্লায়ার</th><th>নোট</th><th>টাকা</th><th>মাধ্যম</th><th></th></tr></thead>
-      <tbody>${sr.map(x => `<tr><td>${dateBn(x.date)}</td><td>${supplierName(x.supplier_id)}</td><td>${x.note || '-'}</td><td class="num">${taka(x.amount)}</td>
-        <td><span class="tag ${x.payment_method}">${paymentMethodDisplay(x.payment_method, x.payment_account_id)}</span></td>
+      <tbody>${sr.map(x => `<tr><td>${dateBn(x.date)}</td><td>${escapeHTML(supplierName(x.supplier_id))}</td><td>${escapeHTML(x.note || '-')}</td><td class="num">${taka(x.amount)}</td>
+        <td><span class="tag ${x.payment_method}">${escapeHTML(paymentMethodDisplay(x.payment_method, x.payment_account_id))}</span></td>
         <td><div class="row-actions">
           <button class="btn btn-ghost btn-sm" onclick="openEditAdvanceModal('supplier','${x.id}')">এডিট</button>
           <button class="btn btn-danger-ghost btn-sm" onclick="deleteAdvance('supplier','${x.id}','${x.supplier_id}',${x.amount})">ডিলিট</button>

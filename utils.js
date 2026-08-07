@@ -26,6 +26,14 @@ export function val(id) {
 export function emptyState(title, sub) {
   return `<div class="empty-state"><b>${title}</b>${sub}</div>`;
 }
+export function escapeHTML(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 export function setLoading(on) {
   document.getElementById('loadingBanner').style.display = on ? 'block' : 'none';
 }

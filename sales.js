@@ -1,6 +1,6 @@
 import { sb } from './supabaseClient.js';
 import { DB, loadAll, customerName, brandName, ensureCustomer } from './state.js';
-import { taka, val, todayISO, dateBn, emptyState, setLoading, paymentMethodOptions } from './utils.js';
+import { taka, val, todayISO, dateBn, emptyState, escapeHTML, setLoading, paymentMethodOptions } from './utils.js';
 import { openModal, closeModal } from './modal.js';
 import { renderCatalog } from './catalog.js';
 import { resolvePaymentSelection, paymentMethodDisplay } from './payment-accounts.js';
@@ -36,14 +36,14 @@ export function renderSales() {
         ${rows.map(s => `
           <tr>
             <td>${dateBn(s.date)}</td>
-            <td>${s.memo_no ? `<strong>${s.memo_no}</strong>` : '<span class="helper">-</span>'}</td>
+            <td>${s.memo_no ? `<strong>${escapeHTML(s.memo_no)}</strong>` : '<span class="helper">-</span>'}</td>
             <td><span class="tag ${s.sale_type}">${s.sale_type === 'wholesale' ? 'পাইকারি' : 'খুচরা'}</span></td>
-            <td>${customerName(s.customer_id)}</td>
-            <td>${s.items.map(i => `${i.name} × ${i.qty}`).join(', ')}</td>
+            <td>${escapeHTML(customerName(s.customer_id))}</td>
+            <td>${s.items.map(i => `${escapeHTML(i.name)} × ${i.qty}`).join(', ')}</td>
             <td class="num">${taka(s.total)}</td>
             <td class="num">${s.discount > 0 ? `<span class="tag" style="background:rgba(16,185,129,0.15);color:#10b981">${taka(s.discount)}</span>` : '<span class="helper">-</span>'}</td>
             <td class="num">${taka(s.paid)}</td>
-            <td><span class="tag ${s.payment_method}">${paymentMethodDisplay(s.payment_method, s.payment_account_id)}</span></td>
+            <td><span class="tag ${s.payment_method}">${escapeHTML(paymentMethodDisplay(s.payment_method, s.payment_account_id))}</span></td>
             <td class="num">${s.due > 0 ? `<span class="tag due">${taka(s.due)}</span>` : `<span class="tag paid">নেই</span>`}</td>
             <td><div class="row-actions">
               <button class="btn btn-gold btn-sm" onclick="printSaleReceipt('${s.id}')">🖨️ রিসিট</button>
@@ -183,6 +183,7 @@ export async function saveSale() {
   const due = Math.max(0, afterDiscount - paid);
 
   setLoading(true);
+  let saleRowId = null;
   try {
     const paymentSel = await resolvePaymentSelection('f_s');
     if (!paymentSel) return;
@@ -194,16 +195,25 @@ export async function saveSale() {
       payment_method: paymentSel.payment_method, payment_account_id: paymentSel.payment_account_id
     }).select().single();
     if (serr) { alert('বিক্রয় সেভ ব্যর্থ: ' + serr.message); return; }
+    saleRowId = saleRow.id;
 
     const itemRows = validItems.map(i => ({ sale_id: saleRow.id, product_id: i.product_id, name: i.name, qty: i.qty, price: i.price }));
-    await sb.from('sale_items').insert(itemRows);
+    const { error: ierr } = await sb.from('sale_items').insert(itemRows);
+    if (ierr) {
+      // Rollback: delete the sale row to avoid orphaned record
+      await sb.from('sales').delete().eq('id', saleRowId);
+      alert('বিক্রয় আইটেম সেভ ব্যর্থ (বিক্রয় বাতিল হয়েছে): ' + ierr.message); return;
+    }
 
+    // Update stock quantities — warn if any update fails but continue
     for (const it of validItems) {
       const p = DB.products.find(x => x.id === it.product_id);
       const newQty = Math.max(0, (p ? p.qty : 0) - it.qty);
-      await sb.from('products').update({ qty: newQty }).eq('id', it.product_id);
+      const { error: qerr } = await sb.from('products').update({ qty: newQty }).eq('id', it.product_id);
+      if (qerr) console.warn('স্টক আপডেট ব্যর্থ (প্রোডাক্ট ' + it.name + '):', qerr.message);
     }
-    await sb.from('customers').update({ due: customer.due + due }).eq('id', customer.id);
+    const { error: cerr } = await sb.from('customers').update({ due: customer.due + due }).eq('id', customer.id);
+    if (cerr) console.warn('কাস্টমার বকেয়া আপডেট ব্যর্থ:', cerr.message);
 
     closeModal(); await loadAll(); renderSales(); renderCatalog();
   } finally { setLoading(false); }

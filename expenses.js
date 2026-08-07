@@ -1,6 +1,6 @@
 import { sb } from './supabaseClient.js';
 import { DB, loadAll } from './state.js';
-import { taka, val, todayISO, dateBn, emptyState, paymentMethodOptions, setLoading } from './utils.js';
+import { taka, val, todayISO, dateBn, emptyState, escapeHTML, paymentMethodOptions, setLoading } from './utils.js';
 import { openModal, closeModal } from './modal.js';
 import { resolvePaymentSelection, paymentMethodDisplay } from './payment-accounts.js';
 
@@ -10,9 +10,9 @@ export function renderExpenses() {
   if (!DB.expenses.length) { wrap.innerHTML = emptyState('কোনো খরচ নেই', 'প্রথম খরচ যোগ করুন'); return; }
   const rows = [...DB.expenses].sort((a, b) => b.date.localeCompare(a.date));
   wrap.innerHTML = `<table><thead><tr><th>তারিখ</th><th>খাত</th><th>নোট</th><th>টাকা</th><th>মাধ্যম</th><th></th></tr></thead>
-    <tbody>${rows.map(e => `<tr><td>${dateBn(e.date)}</td><td>${e.category}</td><td>${e.note || '-'}</td>
+    <tbody>${rows.map(e => `<tr><td>${dateBn(e.date)}</td><td>${escapeHTML(e.category)}</td><td>${escapeHTML(e.note || '-')}</td>
       <td class="num">${taka(e.amount)}</td>
-      <td><span class="tag ${e.payment_method}">${paymentMethodDisplay(e.payment_method, e.payment_account_id)}</span></td>
+      <td><span class="tag ${e.payment_method}">${escapeHTML(paymentMethodDisplay(e.payment_method, e.payment_account_id))}</span></td>
       <td><div class="row-actions">
         <button class="btn btn-ghost btn-sm" onclick="openEditExpenseModal('${e.id}')">এডিট</button>
         <button class="btn btn-danger-ghost btn-sm" onclick="deleteExpense('${e.id}')">ডিলিট</button>
@@ -35,7 +35,7 @@ export function openEditExpenseModal(id) {
   if (!e) return;
   openModal(`
     <h3>খরচ এডিট করুন</h3><div class="stitch"></div>
-    <div class="field"><label>খাত</label><input id="ee_cat" value="${e.category}"></div>
+    <div class="field"><label>খাত</label><input id="ee_cat" value="${escapeHTML(e.category)}"></div>
     <div class="row2">
       <div class="field"><label>টাকা</label><input id="ee_amt" type="number" value="${e.amount}"></div>
       <div class="field"><label>তারিখ</label><input id="ee_date" type="date" value="${e.date}"></div>

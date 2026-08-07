@@ -1,7 +1,7 @@
 import { sb } from './supabaseClient.js';
 import { DB, loadAll } from './state.js';
 import { brandName, supplierName, ensureSupplier } from './state.js';
-import { taka, val, todayISO, dateBn, emptyState, paymentMethodOptions, setLoading } from './utils.js';
+import { taka, val, todayISO, dateBn, emptyState, escapeHTML, paymentMethodOptions, setLoading } from './utils.js';
 import { openModal, closeModal } from './modal.js';
 import { renderCatalog } from './catalog.js';
 import { resolvePaymentSelection, paymentMethodDisplay } from './payment-accounts.js';
@@ -29,13 +29,13 @@ export function renderPurchases() {
         ${rows.map(p => `
           <tr>
             <td>${dateBn(p.date)}</td>
-            <td>${p.memo_no ? `<strong>${p.memo_no}</strong>` : '<span class="helper">-</span>'}</td>
-            <td>${brandName(p.brand_id)}</td><td>${supplierName(p.supplier_id)}</td>
-            <td>${p.items.map(i => `${i.name} × ${i.qty}`).join(', ')}</td>
+            <td>${p.memo_no ? `<strong>${escapeHTML(p.memo_no)}</strong>` : '<span class="helper">-</span>'}</td>
+            <td>${escapeHTML(brandName(p.brand_id))}</td><td>${escapeHTML(supplierName(p.supplier_id))}</td>
+            <td>${p.items.map(i => `${escapeHTML(i.name)} × ${i.qty}`).join(', ')}</td>
             <td class="num">${taka(p.total)}</td>
             <td class="num">${p.discount > 0 ? `<span class="tag" style="background:rgba(16,185,129,0.15);color:#10b981">${taka(p.discount)}</span>` : '<span class="helper">-</span>'}</td>
             <td class="num">${taka(p.paid)}</td>
-            <td><span class="tag ${p.payment_method}">${paymentMethodDisplay(p.payment_method, p.payment_account_id)}</span></td>
+            <td><span class="tag ${p.payment_method}">${escapeHTML(paymentMethodDisplay(p.payment_method, p.payment_account_id))}</span></td>
             <td class="num">${p.due > 0 ? `<span class="tag due">${taka(p.due)}</span>` : `<span class="tag paid">নেই</span>`}</td>
             <td><div class="row-actions">
               <button class="btn btn-ghost btn-sm" onclick="openEditPurchaseModal('${p.id}')">এডিট</button>
@@ -116,7 +116,7 @@ export function renderPurchaseRows() {
         <div class="field" style="margin:0;"><label>প্রোডাক্ট</label>
           <select onchange="onPurchaseProductChange(${idx}, this.value)">
             <option value="">-- বাছাই বা নতুন --</option>
-            ${prods.map(p => `<option value="${p.id}" ${p.id === it.product_id ? 'selected' : ''}>${p.name} — ${brandName(p.brand_id)} (স্টক ${p.qty})</option>`).join('')}
+            ${prods.map(p => `<option value="${p.id}" ${p.id === it.product_id ? 'selected' : ''}>${escapeHTML(p.name)} — ${escapeHTML(brandName(p.brand_id))} (স্টক ${p.qty})</option>`).join('')}
             <option value="__new__" ${it.product_id === '__new__' ? 'selected' : ''}>➕ নতুন প্রোডাক্ট</option>
           </select>
         </div>
@@ -224,14 +224,21 @@ export async function savePurchase() {
     if (perr) { alert('ক্রয় সেভ ব্যর্থ: ' + perr.message); return; }
 
     const itemRows = resolvedItems.map(i => ({ purchase_id: purchaseRow.id, product_id: i.product_id, name: i.name, qty: i.qty, cost: i.cost }));
-    await sb.from('purchase_items').insert(itemRows);
+    const { error: ierr } = await sb.from('purchase_items').insert(itemRows);
+    if (ierr) {
+      // Rollback: delete the purchase row to avoid orphaned record
+      await sb.from('purchases').delete().eq('id', purchaseRow.id);
+      alert('ক্রয় আইটেম সেভ ব্যর্থ (ক্রয় বাতিল হয়েছে): ' + ierr.message); return;
+    }
 
     for (const it of resolvedItems) {
       const p = DB.products.find(x => x.id === it.product_id);
       const newQty = (p ? p.qty : 0) + it.qty;
-      await sb.from('products').update({ brand_id: brandId, qty: newQty, buy_price: it.cost }).eq('id', it.product_id);
+      const { error: qerr } = await sb.from('products').update({ brand_id: brandId, qty: newQty, buy_price: it.cost }).eq('id', it.product_id);
+      if (qerr) console.warn('স্টক আপডেট ব্যর্থ (প্রোডাক্ট ' + it.name + '):', qerr.message);
     }
-    await sb.from('suppliers').update({ due: supplier.due + due }).eq('id', supplier.id);
+    const { error: serr } = await sb.from('suppliers').update({ due: supplier.due + due }).eq('id', supplier.id);
+    if (serr) console.warn('সাপ্লায়ার দেনা আপডেট ব্যর্থ:', serr.message);
 
     closeModal(); await loadAll(); renderPurchases(); renderCatalog();
   } finally { setLoading(false); }

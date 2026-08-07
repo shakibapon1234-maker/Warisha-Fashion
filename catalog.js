@@ -1,6 +1,6 @@
 import { sb } from './supabaseClient.js';
 import { DB, loadAll } from './state.js';
-import { taka, val, emptyState } from './utils.js';
+import { taka, val, emptyState, escapeHTML } from './utils.js';
 import { openModal, closeModal } from './modal.js';
 
 /* ============================================================ CATALOG (Brand + Products) */
@@ -37,8 +37,8 @@ export function renderProductSummary() {
         <tbody>
           ${rows.map(r => `
             <tr>
-              <td>${r.name}</td>
-              <td>${[...r.brands].join(', ')}</td>
+              <td>${escapeHTML(r.name)}</td>
+              <td>${[...r.brands].map(escapeHTML).join(', ')}</td>
               <td class="num">${r.qty} ${r.qty <= 3 ? '<span class="tag low">কম</span>' : ''}</td>
               <td class="num">${taka(r.value)}</td>
             </tr>`).join('')}
@@ -62,7 +62,7 @@ export function renderCatalog() {
     <div class="panel brand-panel">
       <div class="panel-flex">
         <div>
-          <h3 style="margin-bottom:2px;">${b.name}</h3>
+          <h3 style="margin-bottom:2px;">${escapeHTML(b.name)}</h3>
           <div class="helper">মোট ${stats.qty} পিস &nbsp;•&nbsp; স্টক ভ্যালু ${taka(stats.value)}</div>
         </div>
         <div class="row-actions">
@@ -78,7 +78,7 @@ export function renderCatalog() {
           <tbody>
             ${products.map(p => `
               <tr>
-                <td>${p.name}</td><td>${p.category || '-'}</td><td>${p.size || '-'} / ${p.color || '-'}</td>
+                <td>${escapeHTML(p.name)}</td><td>${escapeHTML(p.category || '-')}</td><td>${escapeHTML(p.size || '-')} / ${escapeHTML(p.color || '-')}</td>
                 <td class="num">${taka(p.buy_price)}</td>
                 <td class="num">${p.qty} ${p.qty <= 3 ? '<span class="tag low">কম</span>' : ''}</td>
                 <td class="num">${taka(p.qty * p.buy_price)}</td>
