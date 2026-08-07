@@ -150,7 +150,7 @@ export function runSyncGuardAudit() {
     }
   });
 
-  // Audit Product Stock Quantities
+  // Audit Product Stock Quantities & Brand Mismatches
   DB.products.forEach(prod => {
     let purchasedQty = 0;
     DB.purchases.forEach(p => {
@@ -169,6 +169,14 @@ export function runSyncGuardAudit() {
     const expectedQty = Math.max(0, purchasedQty - soldQty);
     if (prod.qty !== expectedQty) {
       issues.push(`প্রোডাক্ট '${prod.name}': বর্তমান মজুদ স্টক ${prod.qty} পিস, তবে ক্রয়-বিক্রয় হিসেব অনুযায়ী হওয়ার কথা ${expectedQty} পিস`);
+    }
+
+    // Check if product's latest purchase brand differs from its product brand
+    const latestPurchase = DB.purchases.find(p => p.items.some(it => it.product_id === prod.id));
+    if (latestPurchase && latestPurchase.brand_id && latestPurchase.brand_id !== prod.brand_id) {
+      const pBrand = DB.brands.find(b => b.id === latestPurchase.brand_id)?.name || 'অজানা';
+      const cBrand = DB.brands.find(b => b.id === prod.brand_id)?.name || 'অজানা';
+      issues.push(`প্রোডাক্ট '${prod.name}': ক্রয়ে ব্র্যান্ড দেওয়া হয়েছে '${pBrand}', কিন্তু ক্যাটালগে আছে '${cBrand}'`);
     }
   });
 
@@ -210,7 +218,7 @@ export async function fixSyncGuardDiscrepancies() {
       }
     }
 
-    // Fix Product Stock
+    // Fix Product Stock & Brand Mismatches
     for (const prod of DB.products) {
       let purchasedQty = 0;
       DB.purchases.forEach(p => {
@@ -221,8 +229,12 @@ export async function fixSyncGuardDiscrepancies() {
         s.items.forEach(it => { if (it.product_id === prod.id) soldQty += Number(it.qty || 0); });
       });
       const expectedQty = Math.max(0, purchasedQty - soldQty);
-      if (prod.qty !== expectedQty) {
-        await sb.from('products').update({ qty: expectedQty }).eq('id', prod.id);
+
+      const latestPurchase = DB.purchases.find(p => p.items.some(it => it.product_id === prod.id));
+      const targetBrandId = (latestPurchase && latestPurchase.brand_id) ? latestPurchase.brand_id : prod.brand_id;
+
+      if (prod.qty !== expectedQty || prod.brand_id !== targetBrandId) {
+        await sb.from('products').update({ qty: expectedQty, brand_id: targetBrandId }).eq('id', prod.id);
       }
     }
 

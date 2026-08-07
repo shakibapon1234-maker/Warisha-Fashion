@@ -141,7 +141,7 @@ export function onPurchaseProductChange(idx, pid) {
       purchaseItems[idx].name = p.name;
       purchaseItems[idx].cost = p.buy_price;
       const brandSel = document.getElementById('f_pubrand');
-      if (brandSel && !brandSel.value) {
+      if (brandSel && p.brand_id) {
         brandSel.value = p.brand_id;
       }
     }
@@ -229,7 +229,7 @@ export async function savePurchase() {
     for (const it of resolvedItems) {
       const p = DB.products.find(x => x.id === it.product_id);
       const newQty = (p ? p.qty : 0) + it.qty;
-      await sb.from('products').update({ qty: newQty, buy_price: it.cost }).eq('id', it.product_id);
+      await sb.from('products').update({ brand_id: brandId, qty: newQty, buy_price: it.cost }).eq('id', it.product_id);
     }
     await sb.from('suppliers').update({ due: supplier.due + due }).eq('id', supplier.id);
 
@@ -378,7 +378,7 @@ export async function saveEditPurchase(id) {
     for (const it of resolvedItems) {
       const p = DB.products.find(x => x.id === it.product_id);
       const newQty = (p ? p.qty : 0) + it.qty;
-      await sb.from('products').update({ qty: newQty, buy_price: it.cost }).eq('id', it.product_id);
+      await sb.from('products').update({ brand_id: brandId, qty: newQty, buy_price: it.cost }).eq('id', it.product_id);
     }
     const currentSup = DB.suppliers.find(x => x.id === supplier.id) || supplier;
     await sb.from('suppliers').update({ due: currentSup.due + due }).eq('id', supplier.id);
