@@ -61,7 +61,7 @@ export async function printSaleReceipt(id) {
 
     body {
       font-family: 'Hind Siliguri', sans-serif;
-      background: #f8f5ee;
+      background: linear-gradient(160deg, #fdf3e4, #f3e9d8 60%, #efe3cd);
       color: #1a1610;
       min-height: 100vh;
       display: flex;
@@ -70,124 +70,149 @@ export async function printSaleReceipt(id) {
     }
 
     .receipt-card {
-      background: #fff;
+      background: #fffdf8;
       width: 100%;
       max-width: 380px;
-      border-radius: 10px;
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 4px 40px rgba(0,0,0,0.12);
+      box-shadow: 0 10px 46px rgba(90,50,10,0.18), 0 0 0 1px rgba(201,151,62,0.15);
       height: fit-content;
+      position: relative;
     }
 
     /* ---- Header ---- */
     .receipt-header {
-      background: linear-gradient(135deg, #0F332C, #1D5F53);
+      background:
+        radial-gradient(120% 100% at 15% -10%, rgba(201,151,62,0.35), transparent 55%),
+        linear-gradient(135deg, #14100d, #262019 55%, #14100d);
       color: #f5f1e4;
-      padding: 18px 16px 14px;
+      padding: 26px 16px 16px;
       text-align: center;
       position: relative;
+      overflow: hidden;
+    }
+    .receipt-header::before {
+      content: '';
+      position: absolute;
+      top: -40%; left: -10%;
+      width: 60%; height: 180%;
+      background: linear-gradient(120deg, transparent 40%, rgba(231,201,137,0.12) 50%, transparent 60%);
     }
     .receipt-header::after {
       content: '';
       display: block;
-      height: 4px;
-      background: repeating-linear-gradient(90deg, #B9812E 0 8px, #C9973E 8px 16px, #E7C989 16px 24px, #C9973E 24px 32px);
+      height: 5px;
+      background: repeating-linear-gradient(90deg, #8a5a1f 0 8px, #C9973E 8px 16px, #F0D9A0 16px 24px, #C9973E 24px 32px);
       position: absolute;
       bottom: 0; left: 0; right: 0;
     }
-    .logo {
-      width: 52px;
-      height: 52px;
+    .logo-ring {
+      width: 76px;
+      height: 76px;
       border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid rgba(255,255,255,0.25);
-      margin-bottom: 8px;
-      display: block;
-      margin: 0 auto 8px;
-    }
-    .logo-placeholder {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.15);
+      margin: 0 auto 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      background: linear-gradient(135deg, #E7C989, #B9812E 45%, #E7C989);
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.08), 0 6px 22px rgba(0,0,0,0.35), 0 0 24px rgba(231,201,137,0.35);
+      position: relative;
+    }
+    .logo {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #14100d;
+      display: block;
+    }
+    .logo-placeholder {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: #14100d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
       font-weight: 800;
       color: #E7C989;
-      margin: 0 auto 8px;
-      border: 2px solid rgba(255,255,255,0.25);
+      border: 3px solid #14100d;
       font-family: 'Baloo Da 2', sans-serif;
     }
     .shop-name {
       font-family: 'Baloo Da 2', sans-serif;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 800;
-      color: #FBF6E8;
+      background: linear-gradient(90deg, #F0D9A0, #E7C989 40%, #C9973E);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
       letter-spacing: 0.3px;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
     }
     .shop-sub {
       font-size: 9px;
-      color: #CFE3DA;
+      color: #CFC3AE;
       font-weight: 500;
       letter-spacing: 0.2px;
     }
 
     /* ---- Receipt Label ---- */
     .receipt-label-bar {
-      background: #B9812E;
-      color: #3A2708;
+      background: linear-gradient(90deg, #9c6a24, #C9973E 50%, #9c6a24);
+      color: #2a1c05;
       text-align: center;
-      font-size: 10.5px;
-      font-weight: 700;
-      padding: 5px;
-      letter-spacing: 1px;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 7px;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.25);
     }
 
     /* ---- Meta Info ---- */
     .meta-section {
-      padding: 12px 16px 10px;
+      padding: 14px 16px 11px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 7px 12px;
-      border-bottom: 1px dashed #e2dac4;
+      gap: 8px 12px;
+      border-bottom: 1px dashed #e2c98c;
+      background: linear-gradient(180deg, #fbf3e0, #fffdf8 70%);
     }
     .meta-item label {
       font-size: 8.5px;
-      color: #888;
+      color: #9a8355;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      font-weight: 600;
+      font-weight: 700;
       display: block;
       margin-bottom: 1px;
     }
     .meta-item span {
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       color: #1a1610;
     }
     .badge {
       display: inline-block;
-      padding: 1px 8px;
+      padding: 2px 9px;
       border-radius: 20px;
       font-size: 10px;
       font-weight: 700;
     }
-    .badge.wholesale { background: #ecebf8; color: #4A4A8F; }
-    .badge.retail { background: #e7f0f7; color: #2D5F82; }
+    .badge.wholesale { background: linear-gradient(90deg,#6E59D6,#8A73F0); color: #fff; }
+    .badge.retail { background: linear-gradient(90deg,#1D7DAA,#2FA0D6); color: #fff; }
 
     /* ---- Items Table ---- */
     .items-section { padding: 0 16px 0; }
     .items-section h4 {
       font-size: 9px;
-      color: #888;
+      color: #9a8355;
       text-transform: uppercase;
       letter-spacing: 0.6px;
       font-weight: 700;
-      margin: 10px 0 6px;
+      margin: 12px 0 6px;
     }
     table {
       width: 100%;
@@ -195,32 +220,34 @@ export async function printSaleReceipt(id) {
       font-size: 10.5px;
     }
     thead tr {
-      background: #f0ece0;
+      background: linear-gradient(90deg, #14100d, #2c2419);
     }
     thead th {
-      padding: 5px 5px;
+      padding: 6px 5px;
       text-align: left;
       font-size: 9px;
       font-weight: 700;
-      color: #5a5040;
+      color: #E7C989;
       text-transform: uppercase;
       letter-spacing: 0.3px;
     }
+    thead th:first-child { border-radius: 6px 0 0 6px; }
+    thead th:last-child { border-radius: 0 6px 6px 0; }
     thead th.center, td.center { text-align: center; }
     thead th.right, td.right { text-align: right; }
-    tbody tr { border-bottom: 1px solid #f0ece0; }
+    tbody tr { border-bottom: 1px solid #f0e6cc; }
     tbody tr:last-child { border-bottom: none; }
     tbody td {
-      padding: 5px 5px;
+      padding: 6px 5px;
       font-size: 10.5px;
       color: #1a1610;
     }
-    tbody tr:nth-child(even) { background: #faf8f3; }
+    tbody tr:nth-child(even) { background: #fbf3e0; }
 
     /* ---- Totals ---- */
     .totals-section {
       margin: 10px 16px 0;
-      border-top: 1px dashed #e2dac4;
+      border-top: 1px dashed #e2c98c;
       padding-top: 8px;
     }
     .totals-row {
@@ -229,43 +256,53 @@ export async function printSaleReceipt(id) {
       align-items: center;
       padding: 3px 0;
       font-size: 10.5px;
-      color: #5a5040;
+      color: #7a6a4a;
     }
     .totals-row span { font-weight: 500; }
     .totals-row b { font-weight: 700; color: #1a1610; }
     .totals-row.discount b { color: #059669; }
     .totals-row.grand {
-      background: #0F332C;
+      background: linear-gradient(120deg, #14100d, #2c2419 60%, #14100d);
       color: #f5f1e4;
-      margin: 8px -16px 0;
-      padding: 9px 16px;
+      margin: 10px -16px 0;
+      padding: 12px 16px;
       font-size: 11.5px;
+      position: relative;
+      overflow: hidden;
+    }
+    .totals-row.grand::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: repeating-linear-gradient(90deg, #8a5a1f 0 8px, #C9973E 8px 16px, #F0D9A0 16px 24px, #C9973E 24px 32px);
     }
     .totals-row.grand span, .totals-row.grand b { color: #f5f1e4; }
-    .totals-row.grand b { font-size: 13px; color: #E7C989; }
-    .totals-row.due-row b { color: #B9812E; }
+    .totals-row.grand b { font-size: 15px; color: #E7C989; }
+    .totals-row.due-row b { color: #C9973E; }
     .totals-row.paid-row b { color: #059669; }
 
     /* ---- Footer ---- */
     .receipt-footer {
-      padding: 12px 16px 14px;
+      padding: 14px 16px 16px;
       text-align: center;
+      background: linear-gradient(180deg, #fffdf8, #fbf3e0);
     }
     .thank-you {
       font-family: 'Baloo Da 2', sans-serif;
-      font-size: 12px;
-      font-weight: 700;
-      color: #0F332C;
+      font-size: 13px;
+      font-weight: 800;
+      color: #14100d;
       margin-bottom: 4px;
     }
     .footer-note {
       font-size: 9px;
-      color: #888;
+      color: #9a8355;
       line-height: 1.5;
     }
     .dotted-line {
       border: none;
-      border-top: 1px dashed #e2dac4;
+      border-top: 1px dashed #e2c98c;
       margin: 10px 0;
     }
     .print-btn-wrap {
@@ -277,8 +314,8 @@ export async function printSaleReceipt(id) {
       z-index: 100;
     }
     .print-btn {
-      background: #0F332C;
-      color: #f5f1e4;
+      background: linear-gradient(120deg, #14100d, #2c2419);
+      color: #E7C989;
       border: none;
       border-radius: 12px;
       padding: 12px 24px;
@@ -289,13 +326,13 @@ export async function printSaleReceipt(id) {
       display: flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
-    .print-btn:hover { background: #1D5F53; }
+    .print-btn:hover { background: linear-gradient(120deg, #2c2419, #14100d); }
     .close-btn {
       background: #fff;
-      color: #5a5040;
-      border: 1.5px solid #e2dac4;
+      color: #7a6a4a;
+      border: 1.5px solid #e2c98c;
       border-radius: 12px;
       padding: 12px 18px;
       font-family: 'Hind Siliguri', sans-serif;
@@ -315,12 +352,12 @@ export async function printSaleReceipt(id) {
     }
     .sig-line {
       width: 65px;
-      border-top: 1.5px solid #d0c8b0;
+      border-top: 1.5px solid #cbb178;
       margin: 0 auto 4px;
     }
     .sig-label {
       font-size: 9px;
-      color: #888;
+      color: #9a8355;
       font-weight: 500;
     }
 
@@ -363,7 +400,7 @@ export async function printSaleReceipt(id) {
 
     <!-- Header -->
     <div class="receipt-header">
-      ${logoHTML}
+      <div class="logo-ring">${logoHTML}</div>
       <div class="shop-name">ওয়ারিশা থ্রিপিস</div>
       <div class="shop-sub">লোকানের হিসাব খাতা — ক্রয়, বিক্রয়, বকেয়া ও মূলধন</div>
     </div>
