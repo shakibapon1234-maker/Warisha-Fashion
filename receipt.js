@@ -72,8 +72,8 @@ export async function printSaleReceipt(id) {
     .receipt-card {
       background: #fff;
       width: 100%;
-      max-width: 520px;
-      border-radius: 16px;
+      max-width: 380px;
+      border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 4px 40px rgba(0,0,0,0.12);
       height: fit-content;
@@ -83,56 +83,56 @@ export async function printSaleReceipt(id) {
     .receipt-header {
       background: linear-gradient(135deg, #0F332C, #1D5F53);
       color: #f5f1e4;
-      padding: 28px 28px 22px;
+      padding: 18px 16px 14px;
       text-align: center;
       position: relative;
     }
     .receipt-header::after {
       content: '';
       display: block;
-      height: 6px;
-      background: repeating-linear-gradient(90deg, #B9812E 0 12px, #C9973E 12px 24px, #E7C989 24px 36px, #C9973E 36px 48px);
+      height: 4px;
+      background: repeating-linear-gradient(90deg, #B9812E 0 8px, #C9973E 8px 16px, #E7C989 16px 24px, #C9973E 24px 32px);
       position: absolute;
       bottom: 0; left: 0; right: 0;
     }
     .logo {
-      width: 80px;
-      height: 80px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       object-fit: cover;
-      border: 3px solid rgba(255,255,255,0.25);
-      margin-bottom: 12px;
+      border: 2px solid rgba(255,255,255,0.25);
+      margin-bottom: 8px;
       display: block;
-      margin: 0 auto 12px;
+      margin: 0 auto 8px;
     }
     .logo-placeholder {
-      width: 80px;
-      height: 80px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       background: rgba(255,255,255,0.15);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 38px;
+      font-size: 24px;
       font-weight: 800;
       color: #E7C989;
-      margin: 0 auto 12px;
-      border: 3px solid rgba(255,255,255,0.25);
+      margin: 0 auto 8px;
+      border: 2px solid rgba(255,255,255,0.25);
       font-family: 'Baloo Da 2', sans-serif;
     }
     .shop-name {
       font-family: 'Baloo Da 2', sans-serif;
-      font-size: 26px;
+      font-size: 18px;
       font-weight: 800;
       color: #FBF6E8;
-      letter-spacing: 0.5px;
-      margin-bottom: 3px;
+      letter-spacing: 0.3px;
+      margin-bottom: 2px;
     }
     .shop-sub {
-      font-size: 12px;
+      font-size: 9px;
       color: #CFE3DA;
       font-weight: 500;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.2px;
     }
 
     /* ---- Receipt Label ---- */
@@ -140,95 +140,95 @@ export async function printSaleReceipt(id) {
       background: #B9812E;
       color: #3A2708;
       text-align: center;
-      font-size: 13px;
+      font-size: 10.5px;
       font-weight: 700;
-      padding: 7px;
-      letter-spacing: 1.5px;
+      padding: 5px;
+      letter-spacing: 1px;
       text-transform: uppercase;
     }
 
     /* ---- Meta Info ---- */
     .meta-section {
-      padding: 18px 24px 14px;
+      padding: 12px 16px 10px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px 20px;
-      border-bottom: 1.5px dashed #e2dac4;
+      gap: 7px 12px;
+      border-bottom: 1px dashed #e2dac4;
     }
     .meta-item label {
-      font-size: 10.5px;
+      font-size: 8.5px;
       color: #888;
       text-transform: uppercase;
-      letter-spacing: 0.7px;
+      letter-spacing: 0.5px;
       font-weight: 600;
       display: block;
-      margin-bottom: 2px;
+      margin-bottom: 1px;
     }
     .meta-item span {
-      font-size: 13.5px;
+      font-size: 11px;
       font-weight: 600;
       color: #1a1610;
     }
     .badge {
       display: inline-block;
-      padding: 2px 10px;
+      padding: 1px 8px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 700;
     }
     .badge.wholesale { background: #ecebf8; color: #4A4A8F; }
     .badge.retail { background: #e7f0f7; color: #2D5F82; }
 
     /* ---- Items Table ---- */
-    .items-section { padding: 0 24px 0; }
+    .items-section { padding: 0 16px 0; }
     .items-section h4 {
-      font-size: 11px;
+      font-size: 9px;
       color: #888;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.6px;
       font-weight: 700;
-      margin: 14px 0 8px;
+      margin: 10px 0 6px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+      font-size: 10.5px;
     }
     thead tr {
       background: #f0ece0;
     }
     thead th {
-      padding: 7px 8px;
+      padding: 5px 5px;
       text-align: left;
-      font-size: 11px;
+      font-size: 9px;
       font-weight: 700;
       color: #5a5040;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
     }
     thead th.center, td.center { text-align: center; }
     thead th.right, td.right { text-align: right; }
     tbody tr { border-bottom: 1px solid #f0ece0; }
     tbody tr:last-child { border-bottom: none; }
     tbody td {
-      padding: 8px 8px;
-      font-size: 13px;
+      padding: 5px 5px;
+      font-size: 10.5px;
       color: #1a1610;
     }
     tbody tr:nth-child(even) { background: #faf8f3; }
 
     /* ---- Totals ---- */
     .totals-section {
-      margin: 14px 24px 0;
-      border-top: 1.5px dashed #e2dac4;
-      padding-top: 12px;
+      margin: 10px 16px 0;
+      border-top: 1px dashed #e2dac4;
+      padding-top: 8px;
     }
     .totals-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 0;
-      font-size: 13px;
+      padding: 3px 0;
+      font-size: 10.5px;
       color: #5a5040;
     }
     .totals-row span { font-weight: 500; }
@@ -237,36 +237,36 @@ export async function printSaleReceipt(id) {
     .totals-row.grand {
       background: #0F332C;
       color: #f5f1e4;
-      margin: 10px -24px 0;
-      padding: 13px 24px;
-      font-size: 15px;
+      margin: 8px -16px 0;
+      padding: 9px 16px;
+      font-size: 11.5px;
     }
     .totals-row.grand span, .totals-row.grand b { color: #f5f1e4; }
-    .totals-row.grand b { font-size: 17px; color: #E7C989; }
+    .totals-row.grand b { font-size: 13px; color: #E7C989; }
     .totals-row.due-row b { color: #B9812E; }
     .totals-row.paid-row b { color: #059669; }
 
     /* ---- Footer ---- */
     .receipt-footer {
-      padding: 20px 24px 24px;
+      padding: 12px 16px 14px;
       text-align: center;
     }
     .thank-you {
       font-family: 'Baloo Da 2', sans-serif;
-      font-size: 16px;
+      font-size: 12px;
       font-weight: 700;
       color: #0F332C;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .footer-note {
-      font-size: 11.5px;
+      font-size: 9px;
       color: #888;
-      line-height: 1.6;
+      line-height: 1.5;
     }
     .dotted-line {
       border: none;
-      border-top: 1.5px dashed #e2dac4;
-      margin: 16px 0;
+      border-top: 1px dashed #e2dac4;
+      margin: 10px 0;
     }
     .print-btn-wrap {
       position: fixed;
@@ -314,25 +314,51 @@ export async function printSaleReceipt(id) {
       text-align: center;
     }
     .sig-line {
-      width: 100px;
+      width: 65px;
       border-top: 1.5px solid #d0c8b0;
-      margin: 0 auto 5px;
+      margin: 0 auto 4px;
     }
     .sig-label {
-      font-size: 11px;
+      font-size: 9px;
       color: #888;
       font-weight: 500;
     }
 
+    /* ---- Print: small A6-size receipt, printed on regular A4 paper
+           and meant to be cut out with scissors ---- */
     @media print {
-      body { background: #fff; padding: 0; }
-      .receipt-card { box-shadow: none; border-radius: 0; max-width: 100%; }
+      body {
+        background: #fff;
+        padding: 0;
+        display: block;
+      }
+      .receipt-card {
+        box-shadow: none;
+        border-radius: 0;
+        width: 100mm;
+        max-width: 100mm;
+        margin: 0 auto;
+        border: 1px dashed #999;
+      }
+      .cut-hint {
+        display: block !important;
+        text-align: center;
+        font-size: 8px;
+        color: #999;
+        letter-spacing: 1px;
+        margin: 0 auto 3mm;
+        width: 100mm;
+      }
       .print-btn-wrap { display: none !important; }
-      @page { margin: 8mm; size: A5; }
+      /* A4 sheet — receipt prints small in the corner so it can be
+         cut out; size:A6 keeps the printable content compact. */
+      @page { size: A6; margin: 4mm; }
     }
+    .cut-hint { display: none; }
   </style>
 </head>
 <body>
+  <div class="cut-hint">✂ - - - - - - - - - এখান থেকে কেটে নিন - - - - - - - - - ✂</div>
   <div class="receipt-card">
 
     <!-- Header -->
@@ -464,7 +490,7 @@ export async function printSaleReceipt(id) {
 </html>`;
 
   // Open in new window
-  const win = window.open('', '_blank', 'width=620,height=860,scrollbars=yes,toolbar=no,menubar=no,location=no');
+  const win = window.open('', '_blank', 'width=460,height=760,scrollbars=yes,toolbar=no,menubar=no,location=no');
   if (!win) {
     alert('পপআপ ব্লক হয়েছে। ব্রাউজারে পপআপ অনুমতি দিন।');
     return;
