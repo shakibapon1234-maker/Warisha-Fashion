@@ -8,7 +8,51 @@ export function brandStats(brandId) {
   const items = DB.products.filter(p => p.brand_id === brandId);
   return { qty: items.reduce((s, p) => s + p.qty, 0), value: items.reduce((s, p) => s + p.qty * p.buy_price, 0) };
 }
+export function productSummary() {
+  const map = new Map();
+  DB.products.forEach(p => {
+    const key = (p.name || '').trim().toLowerCase();
+    if (!map.has(key)) {
+      map.set(key, { name: p.name, qty: 0, value: 0, brands: new Set() });
+    }
+    const row = map.get(key);
+    row.qty += p.qty;
+    row.value += p.qty * p.buy_price;
+    const brand = DB.brands.find(b => b.id === p.brand_id);
+    if (brand) row.brands.add(brand.name);
+  });
+  return [...map.values()].sort((a, b) => b.qty - a.qty);
+}
+export function renderProductSummary() {
+  const wrap = document.getElementById('productSummaryList');
+  if (!wrap) return;
+  const rows = productSummary();
+  if (!rows.length) { wrap.innerHTML = emptyState('কোনো প্রোডাক্ট নেই', 'প্রথমে একটা প্রোডাক্ট যোগ করুন'); return; }
+  const totalQty = rows.reduce((s, r) => s + r.qty, 0);
+  const totalValue = rows.reduce((s, r) => s + r.value, 0);
+  wrap.innerHTML = `
+    <div class="table-wrap" style="margin-bottom:0;">
+      <table>
+        <thead><tr><th>প্রোডাক্টের নাম</th><th>ব্র্যান্ড</th><th>মোট Quantity</th><th>মোট স্টক ভ্যালু</th></tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td>${r.name}</td>
+              <td>${[...r.brands].join(', ')}</td>
+              <td class="num">${r.qty} ${r.qty <= 3 ? '<span class="tag low">কম</span>' : ''}</td>
+              <td class="num">${taka(r.value)}</td>
+            </tr>`).join('')}
+          <tr style="background:#F7F4EA;">
+            <td colspan="2"><b>সর্বমোট</b></td>
+            <td class="num"><b>${totalQty}</b></td>
+            <td class="num"><b>${taka(totalValue)}</b></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+}
 export function renderCatalog() {
+  renderProductSummary();
   const wrap = document.getElementById('catalogList');
   if (!DB.brands.length) { wrap.innerHTML = emptyState('কোনো ব্র্যান্ড নেই', 'প্রথমে একটা ব্র্যান্ড যোগ করুন'); return; }
   wrap.innerHTML = DB.brands.map(b => {

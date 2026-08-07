@@ -184,6 +184,30 @@ export function runSyncGuardAudit() {
     });
   });
 
+  // Audit Purchase Invoice Math (total - discount = paid + due) — ছাড় বাদ দিয়ে হিসাব ঠিক আছে কিনা
+  DB.purchases.forEach(p => {
+    const afterDiscount = Math.max(0, Number(p.total || 0) - Number(p.discount || 0));
+    const expectedDue = Math.max(0, afterDiscount - Number(p.paid || 0));
+    if (Math.abs(Number(p.due || 0) - expectedDue) > 0.01) {
+      issues.push(`ক্রয় (মেমো: ${p.memo_no || 'N/A'}): বর্তমান বকেয়া ৳${p.due}, তবে টোটাল-ছাড়-পেইড অনুযায়ী হওয়া উচিত ৳${expectedDue}`);
+    }
+    if (Number(p.paid || 0) > afterDiscount + 0.01) {
+      issues.push(`ক্রয় (মেমো: ${p.memo_no || 'N/A'}): পেইড (৳${p.paid}) ছাড়-পরবর্তী টোটালের (৳${afterDiscount}) চেয়ে বেশি`);
+    }
+  });
+
+  // Audit Sale Invoice Math (total - discount = paid + due) — ছাড় বাদ দিয়ে হিসাব ঠিক আছে কিনা
+  DB.sales.forEach(s => {
+    const afterDiscount = Math.max(0, Number(s.total || 0) - Number(s.discount || 0));
+    const expectedDue = Math.max(0, afterDiscount - Number(s.paid || 0));
+    if (Math.abs(Number(s.due || 0) - expectedDue) > 0.01) {
+      issues.push(`বিক্রয় (মেমো: ${s.memo_no || 'N/A'}): বর্তমান বকেয়া ৳${s.due}, তবে টোটাল-ছাড়-পেইড অনুযায়ী হওয়া উচিত ৳${expectedDue}`);
+    }
+    if (Number(s.paid || 0) > afterDiscount + 0.01) {
+      issues.push(`বিক্রয় (মেমো: ${s.memo_no || 'N/A'}): পেইড (৳${s.paid}) ছাড়-পরবর্তী টোটালের (৳${afterDiscount}) চেয়ে বেশি`);
+    }
+  });
+
   return {
     isHealthy: issues.length === 0,
     issuesCount: issues.length,
@@ -250,7 +274,26 @@ export async function fixSyncGuardDiscrepancies() {
   try {
     const fixedBrand = await autoFixBrandProductMismatches();
 
-    // 2. Fix Customers
+    // 2. Fix Purchase & Sale Invoice Math (due = total - discount - paid) — কাস্টমার/সাপ্লায়ার
+    // দেনা-পাওনা এর উপর নির্ভর করে বলে এটা আগে ঠিক করা দরকার
+    for (const p of DB.purchases) {
+      const afterDiscount = Math.max(0, Number(p.total || 0) - Number(p.discount || 0));
+      const expectedDue = Math.max(0, afterDiscount - Number(p.paid || 0));
+      if (Math.abs(Number(p.due || 0) - expectedDue) > 0.01) {
+        await sb.from('purchases').update({ due: expectedDue }).eq('id', p.id);
+        p.due = expectedDue;
+      }
+    }
+    for (const s of DB.sales) {
+      const afterDiscount = Math.max(0, Number(s.total || 0) - Number(s.discount || 0));
+      const expectedDue = Math.max(0, afterDiscount - Number(s.paid || 0));
+      if (Math.abs(Number(s.due || 0) - expectedDue) > 0.01) {
+        await sb.from('sales').update({ due: expectedDue }).eq('id', s.id);
+        s.due = expectedDue;
+      }
+    }
+
+    // 3. Fix Customers
     for (const c of DB.customers) {
       const custSalesDue = DB.sales.filter(s => s.customer_id === c.id).reduce((s, x) => s + x.due, 0);
       const custPayments = DB.payments_customer.filter(p => p.customer_id === c.id).reduce((s, x) => s + x.amount, 0);
@@ -260,7 +303,7 @@ export async function fixSyncGuardDiscrepancies() {
       }
     }
 
-    // 3. Fix Suppliers
+    // 4. Fix Suppliers
     for (const s of DB.suppliers) {
       const supPurchasesDue = DB.purchases.filter(p => p.supplier_id === s.id).reduce((acc, x) => acc + x.due, 0);
       const supPayments = DB.payments_supplier.filter(p => p.supplier_id === s.id).reduce((acc, x) => acc + x.amount, 0);
@@ -270,7 +313,7 @@ export async function fixSyncGuardDiscrepancies() {
       }
     }
 
-    // 4. Fix Product Stock Quantities
+    // 5. Fix Product Stock Quantities
     for (const prod of DB.products) {
       let purchasedQty = 0;
       DB.purchases.forEach(p => {
