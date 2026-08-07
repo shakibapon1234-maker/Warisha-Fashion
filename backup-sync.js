@@ -215,7 +215,7 @@ export function runSyncGuardAudit() {
   };
 }
 
-export async function autoFixBrandProductMismatches() {
+export async function autoFixBrandProductMismatches(failures = null) {
   let changed = false;
   if (!DB.purchases || !DB.products) return false;
 
@@ -236,14 +236,20 @@ export async function autoFixBrandProductMismatches() {
             buy_price: it.cost || prod.buy_price,
             qty: 0
           }).select().single();
-          if (!nErr && newP) {
+          if (nErr) {
+            if (failures) failures.push(`প্রোডাক্ট তৈরি (${prod.name}): ${nErr.message}`);
+          } else if (newP) {
             brandProd = { ...newP, buy_price: Number(newP.buy_price), qty: Number(newP.qty) };
             DB.products.push(brandProd);
           }
         }
         if (brandProd) {
-          await sb.from('purchase_items').update({ product_id: brandProd.id }).eq('purchase_id', p.id).eq('product_id', it.product_id);
-          it.product_id = brandProd.id;
+          const { error: uErr } = await sb.from('purchase_items').update({ product_id: brandProd.id }).eq('purchase_id', p.id).eq('product_id', it.product_id);
+          if (uErr) {
+            if (failures) failures.push(`ক্রয় আইটেম ব্র্যান্ড আপডেট (মেমো: ${p.memo_no || 'N/A'}): ${uErr.message}`);
+          } else {
+            it.product_id = brandProd.id;
+          }
         }
       }
     }
@@ -253,17 +259,21 @@ export async function autoFixBrandProductMismatches() {
   for (const prod of DB.products) {
     let purchasedQty = 0;
     DB.purchases.forEach(p => {
-      p.items.forEach(it => { if (it.product_id === prod.id) purchasedQty += Number(it.qty || 0); });
+      (p.items || []).forEach(it => { if (it.product_id === prod.id) purchasedQty += Number(it.qty || 0); });
     });
     let soldQty = 0;
     DB.sales.forEach(s => {
-      s.items.forEach(it => { if (it.product_id === prod.id) soldQty += Number(it.qty || 0); });
+      (s.items || []).forEach(it => { if (it.product_id === prod.id) soldQty += Number(it.qty || 0); });
     });
     const expectedQty = Math.max(0, purchasedQty - soldQty);
-    if (prod.qty !== expectedQty) {
+    if (Number(prod.qty || 0) !== expectedQty) {
       changed = true;
-      await sb.from('products').update({ qty: expectedQty }).eq('id', prod.id);
-      prod.qty = expectedQty;
+      const { error: pErr } = await sb.from('products').update({ qty: expectedQty }).eq('id', prod.id);
+      if (pErr) {
+        if (failures) failures.push(`প্রোডাক্ট স্টক ফিক্স (${prod.name}): ${pErr.message}`);
+      } else {
+        prod.qty = expectedQty;
+      }
     }
   }
   return changed;
@@ -280,24 +290,43 @@ export async function fixSyncGuardDiscrepancies() {
   }
 
   try {
-    const fixedBrand = await autoFixBrandProductMismatches();
+    await autoFixBrandProductMismatches(failures);
 
-    // 2. Fix Purchase & Sale Invoice Math (due = total - discount - paid) — কাস্টমার/সাপ্লায়ার
-    // দেনা-পাওনা এর উপর নির্ভর করে বলে এটা আগে ঠিক করা দরকার
+    // 1. Fix Purchase Total, Paid & Due Math
     for (const p of DB.purchases) {
-      const afterDiscount = Math.max(0, Number(p.total || 0) - Number(p.discount || 0));
-      const expectedDue = Math.max(0, afterDiscount - Number(p.paid || 0));
-      if (Math.abs(Number(p.due || 0) - expectedDue) > 0.01) {
-        const ok = await safeUpdate('purchases', { due: expectedDue }, p.id, `ক্রয় (মেমো: ${p.memo_no || 'N/A'})`);
-        if (ok) p.due = expectedDue;
+      let expectedTotal = Number(p.total || 0);
+      if (p.items && p.items.length > 0) {
+        expectedTotal = p.items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.cost || 0), 0);
+      }
+      const afterDiscount = Math.max(0, expectedTotal - Number(p.discount || 0));
+      const expectedPaid = Math.min(Number(p.paid || 0), afterDiscount);
+      const expectedDue = Math.max(0, afterDiscount - expectedPaid);
+
+      if (Math.abs(Number(p.total || 0) - expectedTotal) > 0.01 ||
+          Math.abs(Number(p.paid || 0) - expectedPaid) > 0.01 ||
+          Math.abs(Number(p.due || 0) - expectedDue) > 0.01) {
+        const patch = { total: expectedTotal, paid: expectedPaid, due: expectedDue };
+        const ok = await safeUpdate('purchases', patch, p.id, `ক্রয় (মেমো: ${p.memo_no || 'N/A'})`);
+        if (ok) { p.total = expectedTotal; p.paid = expectedPaid; p.due = expectedDue; }
       }
     }
+
+    // 2. Fix Sale Total, Paid & Due Math
     for (const s of DB.sales) {
-      const afterDiscount = Math.max(0, Number(s.total || 0) - Number(s.discount || 0));
-      const expectedDue = Math.max(0, afterDiscount - Number(s.paid || 0));
-      if (Math.abs(Number(s.due || 0) - expectedDue) > 0.01) {
-        const ok = await safeUpdate('sales', { due: expectedDue }, s.id, `বিক্রয় (মেমো: ${s.memo_no || 'N/A'})`);
-        if (ok) s.due = expectedDue;
+      let expectedTotal = Number(s.total || 0);
+      if (s.items && s.items.length > 0) {
+        expectedTotal = s.items.reduce((acc, it) => acc + Number(it.qty || 0) * Number(it.price || 0), 0);
+      }
+      const afterDiscount = Math.max(0, expectedTotal - Number(s.discount || 0));
+      const expectedPaid = Math.min(Number(s.paid || 0), afterDiscount);
+      const expectedDue = Math.max(0, afterDiscount - expectedPaid);
+
+      if (Math.abs(Number(s.total || 0) - expectedTotal) > 0.01 ||
+          Math.abs(Number(s.paid || 0) - expectedPaid) > 0.01 ||
+          Math.abs(Number(s.due || 0) - expectedDue) > 0.01) {
+        const patch = { total: expectedTotal, paid: expectedPaid, due: expectedDue };
+        const ok = await safeUpdate('sales', patch, s.id, `বিক্রয় (মেমো: ${s.memo_no || 'N/A'})`);
+        if (ok) { s.total = expectedTotal; s.paid = expectedPaid; s.due = expectedDue; }
       }
     }
 
@@ -306,7 +335,7 @@ export async function fixSyncGuardDiscrepancies() {
       const custSalesDue = DB.sales.filter(s => s.customer_id === c.id).reduce((s, x) => s + x.due, 0);
       const custPayments = DB.payments_customer.filter(p => p.customer_id === c.id).reduce((s, x) => s + x.amount, 0);
       const expectedDue = Math.max(0, custSalesDue - custPayments);
-      if (Math.abs(c.due - expectedDue) > 0.01) {
+      if (Math.abs(Number(c.due || 0) - expectedDue) > 0.01) {
         const ok = await safeUpdate('customers', { due: expectedDue }, c.id, `কাস্টমার '${c.name}'`);
         if (ok) c.due = expectedDue;
       }
@@ -317,7 +346,7 @@ export async function fixSyncGuardDiscrepancies() {
       const supPurchasesDue = DB.purchases.filter(p => p.supplier_id === s.id).reduce((acc, x) => acc + x.due, 0);
       const supPayments = DB.payments_supplier.filter(p => p.supplier_id === s.id).reduce((acc, x) => acc + x.amount, 0);
       const expectedDue = Math.max(0, supPurchasesDue - supPayments);
-      if (Math.abs(s.due - expectedDue) > 0.01) {
+      if (Math.abs(Number(s.due || 0) - expectedDue) > 0.01) {
         const ok = await safeUpdate('suppliers', { due: expectedDue }, s.id, `সাপ্লায়ার '${s.name}'`);
         if (ok) s.due = expectedDue;
       }
@@ -327,14 +356,14 @@ export async function fixSyncGuardDiscrepancies() {
     for (const prod of DB.products) {
       let purchasedQty = 0;
       DB.purchases.forEach(p => {
-        p.items.forEach(it => { if (it.product_id === prod.id) purchasedQty += Number(it.qty || 0); });
+        (p.items || []).forEach(it => { if (it.product_id === prod.id) purchasedQty += Number(it.qty || 0); });
       });
       let soldQty = 0;
       DB.sales.forEach(s => {
-        s.items.forEach(it => { if (it.product_id === prod.id) soldQty += Number(it.qty || 0); });
+        (s.items || []).forEach(it => { if (it.product_id === prod.id) soldQty += Number(it.qty || 0); });
       });
       const expectedQty = Math.max(0, purchasedQty - soldQty);
-      if (prod.qty !== expectedQty) {
+      if (Number(prod.qty || 0) !== expectedQty) {
         const ok = await safeUpdate('products', { qty: expectedQty }, prod.id, `প্রোডাক্ট '${prod.name}'`);
         if (ok) prod.qty = expectedQty;
       }
@@ -343,12 +372,12 @@ export async function fixSyncGuardDiscrepancies() {
     await loadAll();
     if (window.renderCatalog) window.renderCatalog();
     if (window.renderPurchases) window.renderPurchases();
+    if (window.renderSales) window.renderSales();
+    if (window.renderLedger) window.renderLedger();
     if (window.renderDashboard) window.renderDashboard();
+    if (window.renderBackupAndSyncSettings) window.renderBackupAndSyncSettings();
 
     if (failures.length) {
-      // কিছু আপডেট সার্ভারে রিজেক্ট হয়েছে (সম্ভবত Supabase-এর RLS/permission policy) —
-      // তাই চুপচাপ ব্যর্থ না হয়ে আসল কারণ দেখানো হচ্ছে, নইলে "ফিক্স" বাটনে ক্লিক করলেও
-      // অমিল যেখানে ছিল সেখানেই থেকে যায় বলে মনে হবে।
       alert('⚠️ কিছু আইটেম ফিক্স করা যায়নি (সার্ভার প্রত্যাখ্যান করেছে):\n\n' + failures.join('\n') +
             '\n\nসম্ভবত Supabase-এ এই টেবিলগুলোর উপর UPDATE পারমিশন (RLS policy) সীমাবদ্ধ আছে — সেটা চেক করুন।');
     } else {

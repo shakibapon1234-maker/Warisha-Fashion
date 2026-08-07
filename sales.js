@@ -178,8 +178,8 @@ export async function saveSale() {
   if (!validItems.length) { alert('অন্তত একটা প্রোডাক্ট বাছাই করুন'); return; }
   const total = validItems.reduce((s, i) => s + i.qty * i.price, 0);
   const discount = Number(val('f_sdiscount') || 0);
-  const paid = Number(val('f_paid') || 0);
   const afterDiscount = Math.max(0, total - discount);
+  const paid = Math.min(Number(val('f_paid') || 0), afterDiscount);
   const due = Math.max(0, afterDiscount - paid);
 
   setLoading(true);
@@ -276,8 +276,8 @@ export async function saveEditSale(id) {
   if (!validItems.length) { alert('অন্তত একটা প্রোডাক্ট বাছাই করুন'); return; }
   const total = validItems.reduce((s, i) => s + i.qty * i.price, 0);
   const discount = Number(val('f_sdiscount') || 0);
-  const paid = Number(val('f_paid') || 0);
   const afterDiscount = Math.max(0, total - discount);
+  const paid = Math.min(Number(val('f_paid') || 0), afterDiscount);
   const due = Math.max(0, afterDiscount - paid);
 
   setLoading(true);
