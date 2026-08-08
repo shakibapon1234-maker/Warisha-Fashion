@@ -1,0 +1,220 @@
+/* ============================================================
+   Warisha থ্রিপিস — "এমারেল্ড গোল্ড" (Emerald Gold) থিম
+   উষ্ণ আইভরি ব্যাকগ্রাউন্ডে গাঢ় পান্না সবুজ ও সোনালি অ্যাকসেন্ট —
+   বুটিক শোরুমের এলিগেন্ট, প্রিমিয়াম লুক।
+   এই ফাইলটি style.css এর পরে লোড হয়ে পুরনো রং ওভাররাইড করে।
+   কোনো লেআউট/স্ট্রাকচার পরিবর্তন করা হয়নি — শুধু রং/ব্যাকগ্রাউন্ড।
+   ============================================================ */
+
+:root{
+  --teal-900:#0B4F3C;   /* গাঢ় পান্না — হেডার বেস */
+  --teal-800:#0F6B4E;   /* পান্না — প্রাইমারি বাটন */
+  --teal-700:#0C5A41;   /* হোভার শেড */
+  --teal-500:#1E8F68;   /* উজ্জ্বল পান্না — ফোকাস/ক্যাশ অ্যাকসেন্ট */
+
+  --gold-600:#A9782E;
+  --gold-500:#C6A15B;   /* প্রধান সোনালি অ্যাকসেন্ট */
+  --gold-300:#E4CE9E;
+
+  --bg:#F7F4EC;          /* উষ্ণ আইভরি ব্যাকগ্রাউন্ড */
+  --card:#FFFFFF;        /* কার্ড প্যানেল — সাদা */
+  --ink:#1E2A22;          /* গাঢ় সবুজাভ কালো লেখা */
+  --muted:#6E7A6F;        /* সবুজাভ ধূসর */
+  --border:#E6E0CE;
+
+  --danger:#A6392E;      --danger-bg:#F8E7E2;
+  --success:#1E8F68;     --success-bg:#E5F3EB;
+  --amber-bg:#F7EED9;
+  --plum:#6B3F63;        --plum-bg:#F1E7EF;
+  --blue:#2E5F82;        --blue-bg:#E6EFF5;
+  --rose:#A8455F;        --rose-bg:#F7E6EB;
+  --indigo:#454A8A;      --indigo-bg:#E9E9F5;
+
+  --canary:#0B4F3C;
+  --canary-soft:#0F6B4E;
+
+  --radius:16px;
+  --shadow: 0 1px 3px rgba(30,20,5,.05), 0 10px 26px rgba(30,20,5,.08);
+}
+
+/* ---------- ব্যাকগ্রাউন্ড: উষ্ণ আইভরি + সংযত সোনালি/পান্না আভা ---------- */
+body{
+  background:
+    radial-gradient(ellipse 900px 500px at 10% -5%, rgba(198,161,91,.10), transparent 55%),
+    radial-gradient(ellipse 800px 600px at 100% 0%, rgba(11,79,60,.06), transparent 50%),
+    var(--bg) !important;
+  background-attachment: fixed, fixed, fixed;
+  color:var(--ink);
+}
+
+/* ---------- হেডার ---------- */
+header.top{
+  background:linear-gradient(135deg, var(--teal-900) 0%, #0F6B4E 100%) !important;
+  box-shadow: 0 10px 24px rgba(11,79,60,.22);
+}
+.brand-text h1{ color:#FBF6E8 !important; letter-spacing:.2px; }
+.brand-text p{ color:var(--gold-300) !important; }
+.userbar span{ color:#D7EADD !important; }
+.userbar .btn-ghost{ color:var(--gold-300) !important; border-color:rgba(228,206,158,.45) !important; }
+.tab-btn{ color:#B7D3C2 !important; }
+.tab-btn.active{ color:#FBF6E8 !important; }
+.tab-btn.active::after{
+  background-image: linear-gradient(90deg, var(--gold-500), var(--gold-300)) !important;
+  height:3px;
+}
+
+/* স্বাচ স্ট্রিপ */
+.swatch-strip{ height:5px; }
+.swatch-strip span{ background:none !important; }
+.swatch-strip span:nth-child(1){ background:var(--gold-500) !important; }
+.swatch-strip span:nth-child(2){ background:var(--success) !important; }
+.swatch-strip span:nth-child(3){ background:var(--plum) !important; }
+.swatch-strip span:nth-child(4){ background:var(--blue) !important; }
+.swatch-strip span:nth-child(5){ background:var(--rose) !important; }
+.swatch-strip span:nth-child(6){ background:var(--indigo) !important; }
+
+/* ---------- বাটন ---------- */
+.btn-primary{
+  background:linear-gradient(135deg, var(--teal-800), var(--teal-900)) !important;
+  color:#FBF6E8 !important;
+  box-shadow:0 6px 16px rgba(11,79,60,.28);
+}
+.btn-primary:hover{ background:var(--teal-700) !important; }
+.btn-gold{ background:linear-gradient(135deg, var(--gold-500), var(--gold-600)) !important; color:#2B1C05 !important; }
+.btn-gold:hover{ background:var(--gold-600) !important; }
+.btn-ghost{ color:var(--teal-900); border-color:var(--border); }
+.btn-ghost:hover{ border-color:var(--teal-800); color:var(--teal-800); }
+.btn-danger-ghost{ color:var(--danger); border-color:#EBD3D0; }
+.seg{ background:#EFEADA; }
+.seg button{ color:var(--muted); }
+.seg button.active{ background:var(--teal-800) !important; color:#FBF6E8 !important; }
+.rep-type-btn.rep-type-active{
+  background:var(--teal-800) !important; color:#FBF6E8 !important; border-color:var(--teal-700) !important;
+  box-shadow:0 4px 12px rgba(11,79,60,.28);
+}
+
+/* ---------- কার্ড ---------- */
+.card{
+  background:var(--card) !important;
+  border:1px solid var(--border) !important;
+  box-shadow:0 1px 3px rgba(30,20,5,.05), 0 8px 20px rgba(30,20,5,.06);
+}
+.card .label{ color:var(--muted) !important; letter-spacing:.3px; }
+.card .icon-chip{ box-shadow:0 3px 10px rgba(0,0,0,.12); }
+
+.card.in::before{ background:linear-gradient(90deg, var(--success), #66C199) !important; }
+.card.in .icon-chip{ background:linear-gradient(135deg, var(--success), #66C199) !important; }
+.card.in .value{ color:var(--success) !important; }
+.card.out::before{ background:linear-gradient(90deg, var(--danger), #D07268) !important; }
+.card.out .icon-chip{ background:linear-gradient(135deg, var(--danger), #D07268) !important; }
+.card.out .value{ color:var(--danger) !important; }
+.card.cash::before{ background:linear-gradient(90deg, var(--teal-900), var(--teal-500)) !important; }
+.card.cash .icon-chip{ background:linear-gradient(135deg, var(--teal-900), var(--teal-500)) !important; }
+.card.cash .value{ color:var(--teal-900) !important; }
+.card.due::before{ background:linear-gradient(90deg, var(--gold-600), var(--gold-300)) !important; }
+.card.due .icon-chip{ background:linear-gradient(135deg, var(--gold-600), var(--gold-300)) !important; }
+.card.due .value{ color:var(--gold-600) !important; }
+.card.plum::before{ background:linear-gradient(90deg, var(--plum), #A970A0) !important; }
+.card.plum .icon-chip{ background:linear-gradient(135deg, var(--plum), #A970A0) !important; }
+.card.plum .value{ color:var(--plum) !important; }
+.card.stock::before{ background:linear-gradient(90deg, var(--blue), #7BAAC9) !important; }
+.card.stock .icon-chip{ background:linear-gradient(135deg, var(--blue), #7BAAC9) !important; }
+.card.stock .value{ color:var(--blue) !important; }
+.card.indigo::before{ background:linear-gradient(90deg, var(--indigo), #8888C6) !important; }
+.card.indigo .icon-chip{ background:linear-gradient(135deg, var(--indigo), #8888C6) !important; }
+.card.indigo .value{ color:var(--indigo) !important; }
+.card.rose::before{ background:linear-gradient(90deg, var(--rose), #D384A0) !important; }
+.card.rose .icon-chip{ background:linear-gradient(135deg, var(--rose), #D384A0) !important; }
+.card.rose .value{ color:var(--rose) !important; }
+
+/* ---------- প্যানেল, টেবিল, মোডাল ---------- */
+.panel, .table-wrap{ background:var(--card) !important; border-color:var(--border) !important; }
+.panel h3{ color:var(--teal-900) !important; }
+thead th{ background:#F3EFE2 !important; color:var(--teal-900) !important; border-bottom-color:var(--border) !important; }
+tbody td{ border-bottom-color:var(--border) !important; color:var(--ink); }
+tbody tr:hover{ background:#FAF8F0 !important; }
+.item-row{ background:#FAF8F0 !important; border-color:var(--border); }
+.totals-box{ background:#F3EFE2 !important; }
+.helper{ color:var(--muted); }
+.empty-state{ color:var(--muted); }
+.empty-state b{ color:var(--ink); }
+
+/* ---------- ফর্ম ফিল্ড ---------- */
+.field label{ color:var(--muted); }
+.field input, .field select, .field textarea{
+  background-color:#FFFFFF !important; color:var(--ink) !important; border-color:var(--border) !important;
+}
+.field input::placeholder, .field textarea::placeholder{ color:#B4AC96; }
+.field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--teal-500) !important; }
+.field select{
+  appearance:none; -webkit-appearance:none; -moz-appearance:none;
+  padding-right:30px; cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236E7A6F'/%3E%3C/svg%3E") !important;
+  background-repeat:no-repeat !important;
+  background-position:right 12px center !important;
+  background-size:10px 6px !important;
+}
+.pw-eye{ color:var(--muted); }
+.pw-eye:hover{ background:#F3EFE2 !important; }
+
+/* ---------- ট্যাগ চিপ ---------- */
+.tag{ font-weight:700; }
+.tag.low{ background:var(--danger-bg) !important; color:var(--danger) !important; }
+.tag.ok{ background:var(--success-bg) !important; color:var(--success) !important; }
+.tag.due{ background:var(--amber-bg) !important; color:var(--gold-600) !important; }
+.tag.paid{ background:var(--success-bg) !important; color:var(--success) !important; }
+.tag.wholesale{ background:var(--plum-bg) !important; color:var(--plum) !important; }
+.tag.retail{ background:var(--blue-bg) !important; color:var(--blue) !important; }
+.tag.cash{ background:var(--success-bg) !important; color:var(--success) !important; }
+.tag.bank{ background:var(--blue-bg) !important; color:var(--blue) !important; }
+.tag.mobile_banking{ background:var(--plum-bg) !important; color:var(--plum) !important; }
+
+/* ---------- বিভাগ শিরোনাম ---------- */
+.section-head h2{
+  background:linear-gradient(90deg, var(--teal-900), var(--gold-600));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.section-head .sub{ color:var(--muted); }
+
+/* ---------- সেলাই লাইন ---------- */
+.stitch{
+  border-top:none; height:2px; opacity:.7; border-radius:2px;
+  background-image:repeating-linear-gradient(90deg,
+    var(--gold-500) 0 10px, transparent 10px 18px);
+}
+
+/* ---------- লগইন স্ক্রিন ---------- */
+.login-card{
+  background:var(--card) !important;
+  border:1px solid var(--border) !important;
+  border-top:4px solid transparent;
+  border-image:linear-gradient(90deg, var(--teal-900), var(--gold-500)) 1;
+  box-shadow:0 20px 50px rgba(30,20,5,.12);
+}
+.login-card .brand-text h1{ color:var(--teal-900) !important; }
+.login-card .brand-text p{ color:var(--muted) !important; }
+#loadingBanner{
+  background:linear-gradient(90deg, var(--gold-500), var(--gold-600)) !important;
+  color:#2B1C05 !important;
+}
+
+/* ---------- মোডাল/ওভারলে ---------- */
+.overlay{ background:rgba(20,25,15,.45) !important; }
+.modal{
+  background:var(--card) !important;
+  color:var(--ink);
+  box-shadow:0 22px 60px rgba(30,20,5,.2);
+}
+.modal h3{ color:var(--teal-900) !important; }
+.remove-row{ color:var(--danger); }
+
+/* ---------- ব্র্যান্ড প্যানেলের বাম বর্ডার ---------- */
+.brand-panel{ border-left:4px solid var(--gold-500) !important; }
+
+/* ---------- সিলেকশন ---------- */
+::selection{ background:var(--gold-300); color:var(--ink); }
+
+/* ছোট স্ক্রিনে হেডার */
+@media (max-width:600px){
+  header.top{ background:linear-gradient(160deg, var(--teal-900) 0%, #0F6B4E 100%) !important; }
+}

@@ -8,7 +8,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" id="themeStylesheet" href="themes/midnight-aurora.css">
+<script>
+/* পেজ রেন্ডারের আগেই সেভ করা থিম প্রয়োগ — কালার-ফ্ল্যাশ এড়াতে */
+(function(){
+  try{
+    var THEME_CSS = {
+      'classic': '',
+      'midnight-aurora': 'themes/midnight-aurora.css',
+      'emerald-gold': 'themes/emerald-gold.css',
+      'rose-gold-luxe': 'themes/rose-gold-luxe.css'
+    };
+    var saved = localStorage.getItem('warisha_theme');
+    if (saved && THEME_CSS.hasOwnProperty(saved)) {
+      document.getElementById('themeStylesheet').setAttribute('href', THEME_CSS[saved]);
+    }
+  }catch(e){}
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -259,7 +276,9 @@
   </section>
 
   <section id="tab-settings">
-    <div class="section-head"><div><h2>সেটিংস</h2><div class="sub">লগইন ইমেইল ও পাসওয়ার্ড পরিবর্তন করুন</div></div></div>
+    <div class="section-head"><div><h2>সেটিংস</h2><div class="sub">থিম, লগইন ইমেইল ও পাসওয়ার্ড পরিবর্তন করুন</div></div></div>
+
+    <div id="themeSettings"></div>
 
     <div class="panel settings-panel">
       <h3>ইমেইল পরিবর্তন</h3>

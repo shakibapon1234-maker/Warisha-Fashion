@@ -3,6 +3,7 @@ import { val, pwField, setLoading } from './utils.js';
 import { DB } from './state.js';
 import { ACCOUNT_TYPE_LABEL, accountsByType } from './payment-accounts.js';
 import { exportSystemBackupJSON, importSystemBackupJSON, runSyncGuardAudit, fixSyncGuardDiscrepancies } from './backup-sync.js';
+import { renderThemeSettings } from './theme-manager.js';
 
 /* ============================================================ SETTINGS */
 export function renderSettings() {
@@ -16,6 +17,7 @@ export function renderSettings() {
     const curEmail = document.getElementById('setCurrentEmail');
     if (curEmail) curEmail.value = data?.user?.email || '';
   });
+  renderThemeSettings();
   renderPaymentAccountsSettings();
   renderSecurityQuestionsSettings();
   renderBackupAndSyncSettings();

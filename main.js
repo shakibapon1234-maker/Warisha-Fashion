@@ -4,6 +4,7 @@
    দরকারি ফাংশনগুলো সংশ্লিষ্ট ফাইলের নিচেই window-এ অ্যাসাইন করা আছে।
    ========================================================== */
 import './utils.js';
+import { initTheme } from './theme-manager.js';
 import { initModal } from './modal.js';
 import './payment-accounts.js';
 import './catalog.js';
@@ -19,5 +20,6 @@ import './settings.js';
 import './tabs.js';
 import { initAuth } from './auth.js';
 
+initTheme();
 initModal();
 initAuth();
