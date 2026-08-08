@@ -8,27 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" id="themeStylesheet" href="themes/midnight-aurora.css">
-<script>
-/* পেজ রেন্ডারের আগেই সেভ করা থিম প্রয়োগ — কালার-ফ্ল্যাশ এড়াতে */
-(function(){
-  try{
-    var THEME_CSS = {
-      'classic': '',
-      'midnight-aurora': 'themes/midnight-aurora.css',
-      'emerald-gold': 'themes/emerald-gold.css',
-      'rose-gold-luxe': 'themes/rose-gold-luxe.css'
-    };
-    var saved = localStorage.getItem('warisha_theme');
-    if (saved && THEME_CSS.hasOwnProperty(saved)) {
-      document.getElementById('themeStylesheet').setAttribute('href', THEME_CSS[saved]);
-    }
-  }catch(e){}
-})();
-</script>
+<link rel="stylesheet" href="themes.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
+<body data-theme="nebula-night">
 
 <div id="loadingBanner">লোড হচ্ছে...</div>
 
@@ -37,7 +20,7 @@
     <div class="brand" style="margin-bottom:18px;">
       <img src="logo.jpeg" alt="Warisha থ্রিপিস লোগো" style="height:56px;width:auto;border-radius:10px;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,.15);">
       <div class="brand-text">
-        <h1 style="color:var(--teal-900);">Warisha থ্রিপিস</h1>
+        <h1 style="color:var(--ink);">Warisha থ্রিপিস</h1>
         <p style="color:var(--muted);">দোকানের হিসাব খাতা</p>
       </div>
     </div>
@@ -73,13 +56,13 @@
   </div>
   <div class="userbar">
     <span id="userEmailLabel"></span>
-    <button class="btn btn-ghost btn-sm" style="color:#FBF6E8;border-color:rgba(255,255,255,.35);" onclick="handleLogout()">লগআউট</button>
+    <button class="btn btn-ghost btn-sm" style="color:var(--header-title);border-color:rgba(255,255,255,.35);" onclick="handleLogout()">লগআউট</button>
   </div>
   <nav class="tabs" id="tabs"></nav>
   <div class="swatch-strip">
-    <span style="background:#C9973E"></span><span style="background:#2F7A4F"></span>
-    <span style="background:#6B3F63"></span><span style="background:#2D5F82"></span>
-    <span style="background:#B23A3A"></span><span style="background:#E7C989"></span>
+    <span style="background:var(--gold-500)"></span><span style="background:var(--success)"></span>
+    <span style="background:var(--plum)"></span><span style="background:var(--blue)"></span>
+    <span style="background:var(--danger)"></span><span style="background:var(--gold-300)"></span>
   </div>
 </header>
 
@@ -151,8 +134,8 @@
           <div class="label">গ্রাহকের অগ্রিম জমা আছে</div><div class="value num" id="dashCustAdv">৳০</div>
         </div>
         <div class="card">
-          <div class="icon-chip" style="background:linear-gradient(135deg,#8A6A2F,#D9AE68);"><svg viewBox="0 0 24 24" fill="none"><path d="M4 21V9l8-5 8 5v12" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M9 21v-6h6v6" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg></div>
-          <div class="label">সাপ্লায়ারকে অগ্রিম দেওয়া আছে</div><div class="value num" id="dashSupAdv" style="color:#8A6A2F;">৳০</div>
+          <div class="icon-chip" style="background:linear-gradient(135deg,var(--gold-600),var(--gold-300));"><svg viewBox="0 0 24 24" fill="none"><path d="M4 21V9l8-5 8 5v12" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M9 21v-6h6v6" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg></div>
+          <div class="label">সাপ্লায়ারকে অগ্রিম দেওয়া আছে</div><div class="value num" id="dashSupAdv" style="color:var(--gold-600);">৳০</div>
         </div>
       </div>
     </div>
@@ -276,9 +259,7 @@
   </section>
 
   <section id="tab-settings">
-    <div class="section-head"><div><h2>সেটিংস</h2><div class="sub">থিম, লগইন ইমেইল ও পাসওয়ার্ড পরিবর্তন করুন</div></div></div>
-
-    <div id="themeSettings"></div>
+    <div class="section-head"><div><h2>সেটিংস</h2><div class="sub">লগইন ইমেইল ও পাসওয়ার্ড পরিবর্তন করুন</div></div></div>
 
     <div class="panel settings-panel">
       <h3>ইমেইল পরিবর্তন</h3>
@@ -296,6 +277,8 @@
       <div id="setPwMsg" class="helper" style="display:none;"></div>
       <button class="btn btn-primary" onclick="handleUpdatePassword()">পাসওয়ার্ড আপডেট করুন</button>
     </div>
+
+    <div id="themeSettings"></div>
 
     <div id="securityQuestionsSettings"></div>
 

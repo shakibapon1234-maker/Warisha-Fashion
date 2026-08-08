@@ -1,0 +1,264 @@
+/* ============================================================
+   Warisha থ্রিপিস — থিম ইঞ্জিন (Theme Engine)
+   ------------------------------------------------------------
+   এই ফাইলে ৪টি প্রিমিয়াম থিম সংজ্ঞায়িত করা আছে। body[data-theme="..."]
+   অ্যাট্রিবিউট অনুযায়ী পুরো অ্যাপের রং/ব্যাকগ্রাউন্ড বদলে যায় —
+   কোনো লেআউট/স্ট্রাকচার পরিবর্তন হয় না, শুধু ভ্যারিয়েবল।
+   style.css এর পর লোড হয় এবং :root এর ডিফল্ট ভ্যালুগুলো ওভাররাইড করে।
+   ============================================================ */
+
+/* ---------------------------------------------------------------
+   থিম ১ (ডিফল্ট) — "মেরুন গোল্ড" প্রিমিয়াম বুটিক থিম
+   হালকা আইভরি ব্যাকগ্রাউন্ড, গাঢ় মেরুন হেডার, সোনালি অ্যাকসেন্ট।
+--------------------------------------------------------------- */
+body[data-theme="maroon-gold"]{
+  --teal-900:#3D0B1C; --teal-800:#6E1530; --teal-700:#54101F; --teal-500:#0F6B5C;
+  --gold-600:#B9812E; --gold-500:#C9973E; --gold-300:#E7C989;
+  --bg:#FBF3EC; --card:#FFFFFF; --ink:#2B1810; --muted:#8A6F5C; --border:#EAD9C9;
+  --danger:#B23A3A; --danger-bg:#FBEAE8; --success:#2F7A4F; --success-bg:#E9F4EC;
+  --amber-bg:#FBF1DF; --plum:#7A3B69; --plum-bg:#F3E8F0;
+  --blue:#2D5F82; --blue-bg:#E7F0F7; --rose:#B23F63; --rose-bg:#FBEAF0; --indigo:#5B4A8F; --indigo-bg:#EEEBF8;
+  --shadow:0 1px 2px rgba(61,11,28,.05), 0 10px 28px rgba(61,11,28,.09);
+
+  --page-bg-image:
+    radial-gradient(circle at 6% 0%, rgba(110,21,48,.08), transparent 40%),
+    radial-gradient(circle at 100% 8%, rgba(201,151,62,.12), transparent 42%),
+    radial-gradient(circle at 12% 100%, rgba(15,107,92,.06), transparent 45%);
+
+  --surface-bg:var(--card);
+  --header-bg:linear-gradient(135deg,#3D0B1C 0%,#6E1530 55%,#8A1D3D 100%);
+  --header-radius:0 0 26px 26px;
+  --header-title:#FBF0E4; --header-sub:#E8C9B8;
+  --tab-ink:#E3C3B0; --tab-ink-active:#FFF6EC;
+  --tab-underline:linear-gradient(90deg, var(--gold-500), var(--rose));
+  --thead-bg:#FBF3EC; --row-hover-bg:#FDF8F2;
+  --field-bg:#FFFDFB; --seg-bg:#F3E9DF; --item-row-bg:#FDF8F2; --totals-bg:#FBF3EC; --hover-bg:#F3E9DF;
+  --tag-retail-bg:#E7F0F7; --tag-retail-ink:#2D5F82;
+  --cb-cash:#7FD9A8; --cb-bank:#8FC1E0; --cb-mobile:#D19FC2;
+  --login-top:var(--gold-500);
+
+  --btn-primary-bg:linear-gradient(135deg,#6E1530,#8A1D3D); --btn-primary-bg-hover:linear-gradient(135deg,#54101F,#6E1530);
+  --btn-primary-shadow:0 6px 16px rgba(110,21,48,.25);
+  --btn-gold-bg:linear-gradient(135deg,var(--gold-500),var(--gold-600)); --btn-gold-bg-hover:linear-gradient(135deg,var(--gold-600),#96691F);
+  --btn-gold-ink:#3A2708; --btn-gold-shadow:0 6px 14px rgba(185,129,46,.25);
+
+  --heading-color:#3D0B1C;
+  --heading-bg:linear-gradient(90deg,#6E1530,var(--gold-600));
+  --heading-clip:text; --heading-fill:transparent;
+
+  --grad-in-a:#2F7A4F; --grad-in-b:#6FCB92; --val-in:#1F5C3A;
+  --grad-out-a:#B23A3A; --grad-out-b:#E88A83; --val-out:#8C2A2A;
+  --grad-cash-a:var(--teal-900); --grad-cash-b:var(--teal-500); --val-cash:var(--teal-900);
+  --grad-due-a:var(--gold-600); --grad-due-b:var(--gold-300); --val-due:var(--gold-600);
+  --grad-plum-a:#7A3B69; --grad-plum-b:#B074A3; --val-plum:var(--plum);
+  --grad-stock-a:var(--blue); --grad-stock-b:#7FB2D6; --val-stock:var(--blue);
+  --grad-indigo-a:var(--indigo); --grad-indigo-b:#8A8AC9; --val-indigo:var(--indigo);
+  --grad-rose-a:var(--rose); --grad-rose-b:#E38AA6; --val-rose:var(--rose);
+}
+
+/* ---------------------------------------------------------------
+   থিম ২ — "রয়্যাল এমেরাল্ড" (Royal Emerald & Gold)
+   ঠান্ডা মিন্ট-আইভরি ব্যাকগ্রাউন্ড, গাঢ় এমেরাল্ড হেডার, সোনালি অ্যাকসেন্ট।
+--------------------------------------------------------------- */
+body[data-theme="royal-emerald"]{
+  --teal-900:#043D30; --teal-800:#0B6B54; --teal-700:#094F3F; --teal-500:#14A085;
+  --gold-600:#B9812E; --gold-500:#D4A94A; --gold-300:#EFD08C;
+  --bg:#F1F7F3; --card:#FFFFFF; --ink:#12271F; --muted:#5F7A70; --border:#DCE9E1;
+  --danger:#B23A3A; --danger-bg:#FBEAE8; --success:#0F8A6C; --success-bg:#E3F5EC;
+  --amber-bg:#FBF1DF; --plum:#6B3F63; --plum-bg:#F1E7EF;
+  --blue:#2D5F82; --blue-bg:#E7F0F7; --rose:#B23F63; --rose-bg:#FBEAF0; --indigo:#3E5C8F; --indigo-bg:#E9EDF7;
+  --shadow:0 1px 2px rgba(4,61,48,.05), 0 10px 26px rgba(4,61,48,.08);
+
+  --page-bg-image:
+    radial-gradient(circle at 100% 0%, rgba(212,169,74,.12), transparent 42%),
+    radial-gradient(circle at 0% 15%, rgba(4,61,48,.08), transparent 42%),
+    radial-gradient(circle at 15% 100%, rgba(20,160,133,.08), transparent 46%);
+
+  --surface-bg:var(--card);
+  --header-bg:linear-gradient(135deg,#043D30 0%,#0B6B54 55%,#0F8A6C 100%);
+  --header-radius:0 0 26px 26px;
+  --header-title:#F3FBF7; --header-sub:#BFE3D3;
+  --tab-ink:#B9D9CB; --tab-ink-active:#FFFFFF;
+  --tab-underline:linear-gradient(90deg, var(--gold-500), var(--teal-500));
+  --thead-bg:#F1F7F3; --row-hover-bg:#F7FBF9;
+  --field-bg:#FDFEFD; --seg-bg:#E7F1EC; --item-row-bg:#F7FBF9; --totals-bg:#F1F7F3; --hover-bg:#E7F1EC;
+  --tag-retail-bg:#E7F0F7; --tag-retail-ink:#2D5F82;
+  --cb-cash:#7FE0B8; --cb-bank:#8FC1E0; --cb-mobile:#D19FC2;
+  --login-top:var(--gold-500);
+
+  --btn-primary-bg:linear-gradient(135deg,#0B6B54,#0F8A6C); --btn-primary-bg-hover:linear-gradient(135deg,#043D30,#0B6B54);
+  --btn-primary-shadow:0 6px 16px rgba(11,107,84,.25);
+  --btn-gold-bg:linear-gradient(135deg,var(--gold-500),var(--gold-600)); --btn-gold-bg-hover:linear-gradient(135deg,var(--gold-600),#96691F);
+  --btn-gold-ink:#3A2708; --btn-gold-shadow:0 6px 14px rgba(212,169,74,.25);
+
+  --heading-color:#043D30;
+  --heading-bg:linear-gradient(90deg,#0B6B54,var(--gold-600));
+  --heading-clip:text; --heading-fill:transparent;
+
+  --grad-in-a:#0F8A6C; --grad-in-b:#6FCB92; --val-in:#0B5C46;
+  --grad-out-a:#B23A3A; --grad-out-b:#E88A83; --val-out:#8C2A2A;
+  --grad-cash-a:var(--teal-900); --grad-cash-b:var(--teal-500); --val-cash:var(--teal-900);
+  --grad-due-a:var(--gold-600); --grad-due-b:var(--gold-300); --val-due:var(--gold-600);
+  --grad-plum-a:#6B3F63; --grad-plum-b:#B074A3; --val-plum:var(--plum);
+  --grad-stock-a:var(--blue); --grad-stock-b:#7FB2D6; --val-stock:var(--blue);
+  --grad-indigo-a:var(--indigo); --grad-indigo-b:#8A8AC9; --val-indigo:var(--indigo);
+  --grad-rose-a:var(--rose); --grad-rose-b:#E38AA6; --val-rose:var(--rose);
+}
+
+/* ---------------------------------------------------------------
+   থিম ৩ (ডিফল্ট) — "নেবুলা নাইট" (Nebula Night)
+   ঘন কালচে-নেভি ব্যাকগ্রাউন্ড, বড় অ্যানিমেটেড গ্লো অর্ব, ভিভিড সায়ান-পার্পল-পিংক,
+   গ্লাস কার্ড — এক্সাক্টলি এই স্টাইলের প্রিমিয়াম ড্যাশবোর্ড লুক।
+--------------------------------------------------------------- */
+body[data-theme="nebula-night"]{
+  --teal-900:#080B1A; --teal-800:#7C3AED; --teal-700:#6D28D9; --teal-500:#22D3EE;
+  --gold-600:#D97706; --gold-500:#F59E0B; --gold-300:#FCD34D;
+  --bg:#060914; --card:#111834; --ink:#EEF1FF; --muted:#8992C4; --border:rgba(255,255,255,.10);
+  --danger:#FB7185; --danger-bg:rgba(251,113,133,.16); --success:#34E29A; --success-bg:rgba(52,226,154,.16);
+  --amber-bg:rgba(245,158,11,.16); --plum:#C084FC; --plum-bg:rgba(192,132,252,.16);
+  --blue:#38BDF8; --blue-bg:rgba(56,189,248,.16); --rose:#EC4899; --rose-bg:rgba(236,72,153,.16); --indigo:#818CF8; --indigo-bg:rgba(129,140,248,.16);
+  --shadow:0 2px 12px rgba(0,0,0,.4), 0 16px 38px rgba(0,0,0,.35);
+
+  --page-bg-image:
+    radial-gradient(circle at 10% 6%, rgba(124,58,237,.30), transparent 42%),
+    radial-gradient(circle at 90% 14%, rgba(34,211,238,.22), transparent 44%),
+    radial-gradient(circle at 14% 96%, rgba(236,72,153,.16), transparent 46%),
+    radial-gradient(circle at 92% 94%, rgba(52,226,154,.14), transparent 46%),
+    radial-gradient(circle, rgba(255,255,255,.04) 1px, transparent 1px) 0 0/26px 26px;
+
+  --surface-bg:linear-gradient(160deg, rgba(255,255,255,.055), rgba(255,255,255,.015)), var(--card);
+  --header-bg:linear-gradient(120deg,#080B1A 0%,#1A1140 55%,#2D0F5C 100%);
+  --header-radius:0 0 26px 26px;
+  --header-title:#F5F7FF; --header-sub:#22D3EE;
+  --tab-ink:#8992C4; --tab-ink-active:#22D3EE;
+  --tab-underline:linear-gradient(90deg, var(--teal-500), var(--plum), var(--rose));
+  --thead-bg:rgba(255,255,255,.05); --row-hover-bg:rgba(255,255,255,.045);
+  --field-bg:rgba(255,255,255,.05); --seg-bg:rgba(255,255,255,.07); --item-row-bg:rgba(255,255,255,.05); --totals-bg:rgba(255,255,255,.055); --hover-bg:rgba(255,255,255,.08);
+  --tag-retail-bg:var(--blue-bg); --tag-retail-ink:var(--blue);
+  --cb-cash:#34E29A; --cb-bank:#38BDF8; --cb-mobile:#C084FC;
+  --login-top:var(--teal-500);
+  --field-arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238992C4'/%3E%3C/svg%3E");
+
+  --btn-primary-bg:linear-gradient(135deg,#7C3AED,#EC4899); --btn-primary-bg-hover:linear-gradient(135deg,#6D28D9,#DB2777);
+  --btn-primary-shadow:0 6px 18px rgba(124,58,237,.45);
+  --btn-gold-bg:linear-gradient(135deg,#22D3EE,#7C3AED); --btn-gold-bg-hover:linear-gradient(135deg,#0EA5C4,#6D28D9);
+  --btn-gold-ink:#0A0B1A; --btn-gold-shadow:0 6px 16px rgba(34,211,238,.35);
+
+  --heading-color:#22D3EE;
+  --heading-bg:linear-gradient(90deg,#22D3EE,#C084FC,#EC4899);
+  --heading-clip:text; --heading-fill:transparent;
+
+  --grad-in-a:#16A166; --grad-in-b:#34E29A; --val-in:#5FF0B4;
+  --grad-out-a:#D9365A; --grad-out-b:#FB7185; --val-out:#FF93A8;
+  --grad-cash-a:#0891A8; --grad-cash-b:var(--teal-500); --val-cash:var(--teal-500);
+  --grad-due-a:var(--gold-600); --grad-due-b:var(--gold-300); --val-due:var(--gold-500);
+  --grad-plum-a:#7C3AED; --grad-plum-b:var(--plum); --val-plum:var(--plum);
+  --grad-stock-a:#0E86C9; --grad-stock-b:var(--blue); --val-stock:var(--blue);
+  --grad-indigo-a:#5B5FE8; --grad-indigo-b:var(--indigo); --val-indigo:var(--indigo);
+  --grad-rose-a:#BE185D; --grad-rose-b:var(--rose); --val-rose:var(--rose);
+}
+
+/* নেবুলা নাইট — গ্লাস কার্ড টিন্ট + রঙিন বর্ডার */
+body[data-theme="nebula-night"] .card.in{background:linear-gradient(160deg, rgba(52,226,154,.18), rgba(52,226,154,.03)), var(--card) !important; border-color:rgba(52,226,154,.4) !important;}
+body[data-theme="nebula-night"] .card.out{background:linear-gradient(160deg, rgba(251,113,133,.18), rgba(251,113,133,.03)), var(--card) !important; border-color:rgba(251,113,133,.4) !important;}
+body[data-theme="nebula-night"] .card.cash{background:linear-gradient(160deg, rgba(34,211,238,.18), rgba(34,211,238,.03)), var(--card) !important; border-color:rgba(34,211,238,.4) !important;}
+body[data-theme="nebula-night"] .card.due{background:linear-gradient(160deg, rgba(245,158,11,.2), rgba(245,158,11,.03)), var(--card) !important; border-color:rgba(245,158,11,.4) !important;}
+body[data-theme="nebula-night"] .card.plum{background:linear-gradient(160deg, rgba(192,132,252,.18), rgba(192,132,252,.03)), var(--card) !important; border-color:rgba(192,132,252,.4) !important;}
+body[data-theme="nebula-night"] .card.stock{background:linear-gradient(160deg, rgba(56,189,248,.18), rgba(56,189,248,.03)), var(--card) !important; border-color:rgba(56,189,248,.4) !important;}
+body[data-theme="nebula-night"] .card.indigo{background:linear-gradient(160deg, rgba(129,140,248,.18), rgba(129,140,248,.03)), var(--card) !important; border-color:rgba(129,140,248,.4) !important;}
+body[data-theme="nebula-night"] .card.rose{background:linear-gradient(160deg, rgba(236,72,153,.18), rgba(236,72,153,.03)), var(--card) !important; border-color:rgba(236,72,153,.4) !important;}
+body[data-theme="nebula-night"] .field select option{ background:var(--card) !important; color:var(--ink) !important; }
+body[data-theme="nebula-night"] .field select option:checked,
+body[data-theme="nebula-night"] .field select option:hover{ background:var(--teal-800) !important; color:#FFF !important; }
+body[data-theme="nebula-night"] ::selection{ background:rgba(34,211,238,.35); color:var(--ink); }
+body[data-theme="nebula-night"] .overlay{ background:rgba(3,5,15,.7); }
+body[data-theme="nebula-night"] .tag.due{ background:var(--amber-bg) !important; color:var(--gold-500) !important; font-weight:700; }
+body[data-theme="nebula-night"] .userbar .btn-ghost{ border-color:rgba(34,211,238,.4) !important; color:var(--teal-500) !important; }
+
+/* ---- বড় অ্যানিমেটেড গ্লো অর্ব (নড়াচড়া করে — "animated" লুক) ---- */
+body[data-theme="nebula-night"]{ position:relative; }
+body[data-theme="nebula-night"]::before,
+body[data-theme="nebula-night"]::after{
+  content:""; position:fixed; border-radius:50%; pointer-events:none; z-index:0; filter:blur(70px);
+}
+body[data-theme="nebula-night"]::before{
+  width:420px; height:420px; top:-140px; left:-120px;
+  background:radial-gradient(circle, rgba(124,58,237,.55), transparent 70%);
+  animation:nebula-float-1 16s ease-in-out infinite;
+}
+body[data-theme="nebula-night"]::after{
+  width:460px; height:460px; bottom:-180px; right:-140px;
+  background:radial-gradient(circle, rgba(34,211,238,.4), transparent 70%);
+  animation:nebula-float-2 20s ease-in-out infinite;
+}
+@keyframes nebula-float-1{
+  0%,100%{ transform:translate(0,0) scale(1); }
+  50%{ transform:translate(50px,40px) scale(1.12); }
+}
+@keyframes nebula-float-2{
+  0%,100%{ transform:translate(0,0) scale(1); }
+  50%{ transform:translate(-40px,-35px) scale(1.1); }
+}
+body[data-theme="nebula-night"] header.top,
+body[data-theme="nebula-night"] main{ position:relative; z-index:1; }
+
+/* ---------------------------------------------------------------
+   থিম ৪ — "ক্লাসিক টিল" (Classic Teal) — মূল আদি রঙের সংস্করণ,
+   যারা আগের চেনা লুক পছন্দ করেন তাদের জন্য।
+--------------------------------------------------------------- */
+body[data-theme="classic-teal"]{
+  --teal-900:#0F332C; --teal-800:#164940; --teal-700:#1D5F53; --teal-500:#2E8874;
+  --gold-600:#B9812E; --gold-500:#C9973E; --gold-300:#E7C989;
+  --bg:#F3F0E6; --card:#FFFFFF; --ink:#241F18; --muted:#746C5C; --border:#E2DAC4;
+  --danger:#B23A3A; --danger-bg:#FBEAE8; --success:#2F7A4F; --success-bg:#E9F4EC;
+  --amber-bg:#FBF1DF; --plum:#6B3F63; --plum-bg:#F1E7EF;
+  --blue:#2D5F82; --blue-bg:#E7F0F7; --rose:#B23F63; --rose-bg:#FBEAF0; --indigo:#4A4A8F; --indigo-bg:#ECEBF8;
+  --shadow:0 1px 2px rgba(20,30,25,.04), 0 6px 20px rgba(20,30,25,.06);
+
+  --page-bg-image:none;
+  --surface-bg:var(--card);
+  --header-bg:linear-gradient(135deg, var(--teal-900), var(--teal-700));
+  --header-radius:0 0 22px 22px;
+  --header-title:#FBF6E8; --header-sub:#CFE3DA;
+  --tab-ink:#D8E7DF; --tab-ink-active:#FFFDF6;
+  --tab-underline:repeating-linear-gradient(90deg, var(--gold-500) 0 6px, transparent 6px 10px);
+  --thead-bg:#F7F4EA; --row-hover-bg:#FAF8F0;
+  --field-bg:#FDFCF8; --seg-bg:#F0ECE0; --item-row-bg:#FAF8F0; --totals-bg:#F7F4EA; --hover-bg:#F0EDE0;
+  --tag-retail-bg:#E4EEF6; --tag-retail-ink:#2D5F82;
+  --cb-cash:#6FCB92; --cb-bank:#7FB2D6; --cb-mobile:#B074A3;
+  --login-top:var(--border);
+
+  --btn-primary-bg:var(--teal-800); --btn-primary-bg-hover:var(--teal-700); --btn-primary-shadow:none;
+  --btn-gold-bg:var(--gold-500); --btn-gold-bg-hover:var(--gold-600); --btn-gold-ink:#3A2708; --btn-gold-shadow:none;
+
+  --heading-color:var(--teal-900);
+  --heading-bg:none; --heading-clip:unset; --heading-fill:unset;
+
+  --grad-in-a:#2F7A4F; --grad-in-b:#6FCB92; --val-in:#1F5C3A;
+  --grad-out-a:#B23A3A; --grad-out-b:#E88A83; --val-out:#8C2A2A;
+  --grad-cash-a:var(--teal-900); --grad-cash-b:var(--teal-500); --val-cash:var(--teal-900);
+  --grad-due-a:var(--gold-600); --grad-due-b:var(--gold-300); --val-due:var(--gold-600);
+  --grad-plum-a:#6B3F63; --grad-plum-b:#B074A3; --val-plum:var(--plum);
+  --grad-stock-a:var(--blue); --grad-stock-b:#7FB2D6; --val-stock:var(--blue);
+  --grad-indigo-a:var(--indigo); --grad-indigo-b:#8A8AC9; --val-indigo:var(--indigo);
+  --grad-rose-a:var(--rose); --grad-rose-b:#E38AA6; --val-rose:var(--rose);
+}
+
+/* ---------------------------------------------------------------
+   থিম পিকার (Settings > থিম) — সোয়াচ কার্ড UI
+--------------------------------------------------------------- */
+.theme-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:12px;}
+.theme-option{
+  position:relative; border-radius:14px; padding:12px; cursor:pointer; text-align:right;
+  border:2px solid var(--border); background:var(--surface-bg); transition:transform .12s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.theme-option:hover{transform:translateY(-2px); box-shadow:var(--shadow);}
+.theme-option.selected{border-color:var(--gold-500); box-shadow:0 0 0 3px var(--amber-bg);}
+.theme-option .theme-preview{
+  height:52px; border-radius:9px; margin-bottom:8px; position:relative; overflow:hidden; box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);
+}
+.theme-option .theme-preview .tp-header{position:absolute; top:0; left:0; right:0; height:20px;}
+.theme-option .theme-preview .tp-dot{position:absolute; width:10px; height:10px; border-radius:50%; bottom:8px;}
+.theme-option .theme-name{font-size:12.5px; font-weight:700; color:var(--ink);}
+.theme-option .theme-check{position:absolute; top:8px; left:8px; width:18px; height:18px; border-radius:50%; background:var(--gold-500); color:#3A2708; font-size:11px; display:none; align-items:center; justify-content:center; font-weight:800;}
+.theme-option.selected .theme-check{display:flex;}

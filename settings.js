@@ -3,7 +3,7 @@ import { val, pwField, setLoading } from './utils.js';
 import { DB } from './state.js';
 import { ACCOUNT_TYPE_LABEL, accountsByType } from './payment-accounts.js';
 import { exportSystemBackupJSON, importSystemBackupJSON, runSyncGuardAudit, fixSyncGuardDiscrepancies } from './backup-sync.js';
-import { renderThemeSettings } from './theme-manager.js';
+import { renderThemeSettings } from './theme.js';
 
 /* ============================================================ SETTINGS */
 export function renderSettings() {
